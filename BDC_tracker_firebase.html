@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Born Dead Collective — Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<script type="module">
+// ── FIREBASE CONFIG ─────────────────────────────────────────────
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDCeyG4fRFUL4btxVIxz8LES0dq0rTyDMc",
+  authDomain: "bdc10-moldy.firebaseapp.com",
+  projectId: "bdc10-moldy",
+  storageBucket: "bdc10-moldy.firebasestorage.app",
+  messagingSenderId: "668393175395",
+  appId: "1:668393175395:web:c5f745d75bedaafd85bb56"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const REF_COMMANDES = doc(db, 'bdc010', 'commandes');
+const REF_PARAMS    = doc(db, 'bdc010', 'params');
+
+// Expose Firebase functions to global scope for the main script
+window._fbSaveCommandes = async (data) => {
+  try { await setDoc(REF_COMMANDES, { data: JSON.stringify(data) }); } catch(e) { console.error('FB save commandes:', e); }
+};
+
+window._fbSaveParams = async (data) => {
+  try { await setDoc(REF_PARAMS, { data: JSON.stringify(data) }); } catch(e) { console.error('FB save params:', e); }
+};
+
+// Listen for real-time updates
+window._fbInit = async () => {
+  // Load initial data
+  try {
+    const snapC = await getDoc(REF_COMMANDES);
+    const snapP = await getDoc(REF_PARAMS);
+    if (snapC.exists()) window._fbOnCommandes(JSON.parse(snapC.data().data));
+    if (snapP.exists()) window._fbOnParams(JSON.parse(snapP.data().data));
+  } catch(e) { console.warn('FB init load:', e); }
+
+  // Real-time listener
+  onSnapshot(REF_COMMANDES, (snap) => {
+    if (snap.exists() && window._fbOnCommandes) {
+      window._fbOnCommandes(JSON.parse(snap.data().data));
+    }
+  });
+  onSnapshot(REF_PARAMS, (snap) => {
+    if (snap.exists() && window._fbOnParams) {
+      window._fbOnParams(JSON.parse(snap.data().data));
+    }
+  });
+
+  // Signal ready
+  window.dispatchEvent(new Event('firebase-ready'));
+};
+
+window._fbInit();
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --accent: #e8ff00;
+    --accent2: #ff3c00;
+    --text: #e8e8e8;
+    --muted: #555;
+    --green: #39ff14;
+    --red: #ff3c00;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* GRAIN */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--accent);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  header h1 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  header .label-tag {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .release-badge {
+    background: var(--accent);
+    color: #000;
+    font-family: var(--font-display);
+    font-size: 16px;
+    letter-spacing: 2px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .release-badge:hover { background: #fff; }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat {
+    padding: 20px 28px;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+  .stat:last-child { border-right: none; }
+
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 38px;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .stat-value.green { color: var(--green); }
+  .stat-value.red   { color: var(--red); }
+  .stat-value.yellow { color: var(--accent); }
+
+  .stat-sub {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    min-height: calc(100vh - 140px);
+  }
+
+  /* PANEL GAUCHE — SAISIE */
+  .panel-left {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .panel-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+  }
+
+  /* TYPE SELECTOR */
+  .type-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .type-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--font-display);
+    font-size: 18px;
+    letter-spacing: 2px;
+    padding: 16px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .type-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .type-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+  }
+
+  .type-btn .icon {
+    display: block;
+    font-size: 28px;
+    margin-bottom: 6px;
+  }
+
+  /* FORM */
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-group label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .form-group input,
+  .form-group select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    border-color: var(--accent);
+  }
+
+  .form-group select option {
+    background: var(--surface2);
+  }
+
+  /* INFO CALC */
+  .calc-preview {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .calc-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+
+  .calc-row .clabel { color: var(--muted); }
+  .calc-row .cval   { color: var(--text); font-weight: 600; }
+  .calc-row .cval.pos { color: var(--green); }
+  .calc-row .cval.neg { color: var(--red); }
+
+  .calc-divider {
+    border-top: 1px solid var(--border);
+    margin: 2px 0;
+  }
+
+  /* BOUTON VALIDER */
+  .btn-add {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 4px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    width: 100%;
+  }
+
+  .btn-add:hover { background: #fff; }
+  .btn-add:active { transform: scale(0.98); }
+  .btn-add:disabled {
+    background: var(--border);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+
+  /* PANEL DROIT — HISTORIQUE */
+  .panel-right {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .history-header {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .history-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: 3px;
+    color: var(--accent);
+  }
+
+  .btn-clear {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-clear:hover { border-color: var(--red); color: var(--red); }
+
+  /* FILTRE */
+  .filter-bar {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .filter-btn {
+    background: none;
+    border: none;
+    border-right: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover { color: var(--text); }
+  .filter-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+
+  /* TABLE */
+  .history-table {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .history-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .history-table th {
+    background: var(--surface);
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 16px;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .history-table td {
+    padding: 12px 16px;
+    font-size: 12px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  .history-table tr:hover td { background: var(--surface2); }
+
+  .badge {
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 3px 8px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .badge-bc { background: rgba(232,255,0,0.15); color: var(--accent); }
+  .badge-ph { background: rgba(255,60,0,0.15); color: var(--accent2); }
+
+  .del-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 8px;
+    transition: color 0.15s;
+  }
+  .del-btn:hover { color: var(--red); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    color: var(--muted);
+    gap: 12px;
+    flex: 1;
+  }
+
+  .empty-state .big { font-family: var(--font-display); font-size: 48px; opacity: 0.2; }
+  .empty-state p { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+
+  /* MODAL RELEASE */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    padding: 32px;
+    width: 420px;
+    max-width: 90vw;
+  }
+
+  .modal h2 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  .modal .form-group { margin-bottom: 16px; }
+
+  .modal-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .btn-save {
+    flex: 1;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    font-family: var(--font-display);
+    font-size: 18px;
+    letter-spacing: 2px;
+    padding: 12px;
+    cursor: pointer;
+  }
+
+  .btn-cancel {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 12px 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-cancel:hover { border-color: var(--red); color: var(--red); }
+
+  /* TOAST */
+  /* SYNC INDICATOR */
+  .sync-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    margin-left: 10px;
+    vertical-align: middle;
+    transition: background 0.3s;
+  }
+  .sync-dot.synced  { background: var(--green); }
+  .sync-dot.syncing { background: #f39c12; animation: pulse 0.8s infinite; }
+  .sync-dot.error   { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--accent);
+    color: #000;
+    font-family: var(--font-display);
+    font-size: 16px;
+    letter-spacing: 2px;
+    padding: 12px 20px;
+    z-index: 200;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  @media (max-width: 800px) {
+    .main { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    .panel-left { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="label-tag">Label Tracker</div>
+    <h1 id="release-name">BDC-010</h1><span class="sync-dot" id="sync-dot" title="Synchronisation Firebase"></span>
+  </div>
+  <button class="release-badge" onclick="openModal()">⚙ PARAMÈTRES</button>
+</header>
+
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-label">Stock restant</div>
+    <div class="stat-value yellow" id="stat-stock">—</div>
+    <div class="stat-sub" id="stat-stock-sub"></div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Ventes totales</div>
+    <div class="stat-value" id="stat-ventes">—</div>
+    <div class="stat-sub" id="stat-ventes-sub"></div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Recettes</div>
+    <div class="stat-value" id="stat-recettes">—</div>
+    <div class="stat-sub">vinyles + fdp</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Balance</div>
+    <div class="stat-value" id="stat-balance">—</div>
+    <div class="stat-sub" id="stat-balance-sub"></div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- PANNEAU SAISIE -->
+  <div class="panel-left">
+    <div class="panel-title">NOUVELLE COMMANDE</div>
+
+    <div class="type-selector">
+      <div class="type-btn active" id="btn-bc" onclick="setType('bigcartel')">
+        <span class="icon">🌐</span>
+        BIGCARTEL
+      </div>
+      <div class="type-btn" id="btn-ph" onclick="setType('physique')">
+        <span class="icon">🤘</span>
+        PHYSIQUE
+      </div>
+      <div class="type-btn" id="btn-distro" onclick="setType('distro')" style="grid-column: span 2;">
+        <span class="icon">📦</span>
+        DISTRO / SHOP
+      </div>
+    </div>
+
+    <div id="form-bc">
+      <div class="form-group">
+        <label>N° de commande</label>
+        <input type="text" id="input-num" placeholder="ex: 15" />
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label>Pays d'expédition</label>
+        <select id="input-pays">
+          <option value="">— Choisir un pays —</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label>Statut</label>
+        <select id="input-statut">
+          <option value="en_attente">⏳ En attente d'envoi</option>
+          <option value="envoye">✓ Envoyé</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="form-ph" style="display:none">
+      <div class="form-group">
+        <label>Quantité vendue</label>
+        <input type="number" id="input-qty" placeholder="ex: 1" min="1" value="1" />
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label>Lieu / Événement (optionnel)</label>
+        <input type="text" id="input-lieu" placeholder="ex: Gibus, Paris" />
+      </div>
+    </div>
+
+    <div id="form-distro" style="display:none">
+      <div class="form-group">
+        <label>Nom du distro / shop</label>
+        <input type="text" id="input-distro-nom" placeholder="ex: React Records" />
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label>Quantité</label>
+        <input type="number" id="input-distro-qty" placeholder="ex: 5" min="1" value="1" />
+      </div>
+    </div>
+
+    <!-- APERÇU CALCUL -->
+    <div class="calc-preview" id="calc-preview">
+      <div class="calc-row">
+        <span class="clabel">Recette vinyle</span>
+        <span class="cval" id="prev-vinyl">—</span>
+      </div>
+      <div class="calc-row" id="row-fdp-enc" style="display:none">
+        <span class="clabel">FdP encaissé</span>
+        <span class="cval" id="prev-fdp-enc">—</span>
+      </div>
+      <div class="calc-row" id="row-fdp-pay" style="display:none">
+        <span class="clabel">FdP payé (Mondial Relay)</span>
+        <span class="cval" id="prev-fdp-pay">—</span>
+      </div>
+      <div class="calc-divider"></div>
+      <div class="calc-divider"></div>
+      <div class="calc-row">
+        <span class="clabel">Marge nette</span>
+        <span class="cval pos" id="prev-total">—</span>
+      </div>
+    </div>
+
+    <button class="btn-add" id="btn-valider" onclick="addCommande()">+ ENREGISTRER</button>
+  </div>
+
+  <!-- PANNEAU HISTORIQUE -->
+  <div class="panel-right">
+    <div class="history-header">
+      <div class="history-title">HISTORIQUE</div>
+      <button class="btn-clear" onclick="clearAll()">⚠ TOUT EFFACER</button>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="setFilter('all', this)">Tout</button>
+      <button class="filter-btn" onclick="setFilter('bigcartel', this)">Bigcartel</button>
+      <button class="filter-btn" onclick="setFilter('physique', this)">Physique</button>
+      <button class="filter-btn" onclick="setFilter('distro', this)">Distro</button>
+    </div>
+
+    <div class="history-table" id="history-table">
+      <!-- rempli par JS -->
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PARAMÈTRES -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2>⚙ PARAMÈTRES RELEASE</h2>
+    <div class="form-group">
+      <label>Nom de la release</label>
+      <input type="text" id="p-nom" placeholder="ex: BDC-010" />
+    </div>
+    <div class="form-group">
+      <label>Stock initial</label>
+      <input type="number" id="p-stock" placeholder="ex: 220" />
+    </div>
+    <div class="form-group">
+      <label>Prix de vente (€)</label>
+      <input type="number" id="p-prix" placeholder="ex: 20" step="0.01" />
+    </div>
+    <div class="form-group">
+      <label>Investissement total (€)</label>
+      <input type="number" id="p-invest" placeholder="ex: 2019.02" step="0.01" />
+    </div>
+    <div class="modal-btns">
+      <button class="btn-save" onclick="saveParams()">SAUVEGARDER</button>
+      <button class="btn-cancel" onclick="closeModal()">ANNULER</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── SYNC STATE ──────────────────────────────────────────────────
+let firebaseReady = false;
+let pendingSync   = false;
+
+function setSyncDot(state) {
+  const dot = document.getElementById('sync-dot');
+  if (dot) { dot.className = 'sync-dot ' + state; }
+}
+
+// ── TARIFS FDP ──────────────────────────────────────────────────
+const TARIFS = [
+  { pays: "France",         fdpEnc: 6.00,  fdpPay: 4.10,  livraison: "Point Relais" },
+  { pays: "Belgique",       fdpEnc: 8.00,  fdpPay: 4.60,  livraison: "Point Relais" },
+  { pays: "Espagne",        fdpEnc: 8.50,  fdpPay: 6.60,  livraison: "Point Relais" },
+  { pays: "Allemagne",      fdpEnc: 14.00, fdpPay: 12.50, livraison: "Domicile" },
+  { pays: "Italie",         fdpEnc: 8.50,  fdpPay: 6.60,  livraison: "Point Relais" },
+  { pays: "Pays-Bas",       fdpEnc: 7.50,  fdpPay: 4.60,  livraison: "Point Relais" },
+  { pays: "Autriche",       fdpEnc: 16.00, fdpPay: 16.00, livraison: "Domicile" },
+  { pays: "Luxembourg",     fdpEnc: 8.00,  fdpPay: 4.60,  livraison: "Point Relais" },
+  { pays: "Portugal",       fdpEnc: 8.00,  fdpPay: 6.60,  livraison: "Point Relais" },
+  { pays: "Pologne",        fdpEnc: 9.00,  fdpPay: 7.20,  livraison: "Point Relais" },
+  { pays: "United Kingdom", fdpEnc: 20.00, fdpPay: null,   livraison: "Domicile" },
+];
+
+// ── STATE ───────────────────────────────────────────────────────
+let params = JSON.parse(localStorage.getItem('bdc_params') || 'null') || {
+  nom: 'BDC-010', stock: 220, prix: 20, invest: 2019.02
+};
+let commandes = JSON.parse(localStorage.getItem('bdc_commandes') || '[]');
+// Données existantes pré-chargées si vide
+if (commandes.length === 0) {
+  let id = 1000;
+  // 10 France envoyées
+  for (let i=1;i<=10;i++) commandes.push({ id:id++, type:'bigcartel', num:String(i), pays:'France', statut:'envoye', date:'2026-01-15' });
+  // 2 Belgique envoyées
+  commandes.push({ id:id++, type:'bigcartel', num:'11', pays:'Belgique', statut:'envoye', date:'2026-01-20' });
+  commandes.push({ id:id++, type:'bigcartel', num:'12', pays:'Belgique', statut:'envoye', date:'2026-01-22' });
+  // 1 Belgique en attente
+  commandes.push({ id:id++, type:'bigcartel', num:'13', pays:'Belgique', statut:'en_attente', date:'2026-03-20' });
+  // 1 Espagne en attente
+  commandes.push({ id:id++, type:'bigcartel', num:'14', pays:'Espagne', statut:'en_attente', date:'2026-03-21' });
+  // 10 physique concert
+  for (let i=0;i<10;i++) commandes.push({ id:id++, type:'physique', qty:1, lieu:'Concert', date:'2026-01-10' });
+  // 3 distro
+  commandes.push({ id:id++, type:'distro', qty:3, nom:'Distro', date:'2026-02-01' });
+  save();
+}
+
+let currentType = 'bigcartel';
+let filterMode  = 'all';
+
+// ── INIT ────────────────────────────────────────────────────────
+function init() {
+  // Remplir dropdown pays
+  const sel = document.getElementById('input-pays');
+  TARIFS.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.pays; o.textContent = t.pays;
+    sel.appendChild(o);
+  });
+
+  document.getElementById('input-pays').addEventListener('change', updatePreview);
+  document.getElementById('input-qty').addEventListener('input', updatePreview);
+
+  updateStats();
+  renderHistory();
+  updatePreview();
+}
+
+// ── TYPE SWITCH ─────────────────────────────────────────────────
+function setType(type) {
+  currentType = type;
+  document.getElementById('btn-bc').classList.toggle('active', type==='bigcartel');
+  document.getElementById('btn-ph').classList.toggle('active', type==='physique');
+  document.getElementById('btn-distro').classList.toggle('active', type==='distro');
+  document.getElementById('form-bc').style.display     = type==='bigcartel' ? 'block' : 'none';
+  document.getElementById('form-ph').style.display     = type==='physique'  ? 'block' : 'none';
+  document.getElementById('form-distro').style.display = type==='distro'    ? 'block' : 'none';
+  document.getElementById('row-fdp-enc').style.display = type==='bigcartel' ? 'flex' : 'none';
+  document.getElementById('row-fdp-pay').style.display = type==='bigcartel' ? 'flex' : 'none';
+  updatePreview();
+}
+
+// ── APERÇU CALCUL ───────────────────────────────────────────────
+function updatePreview() {
+  const prix = params.prix;
+
+  if (currentType === 'bigcartel') {
+    const pays = document.getElementById('input-pays').value;
+    const tarif = TARIFS.find(t => t.pays === pays);
+
+    document.getElementById('prev-vinyl').textContent = fmt(prix);
+
+    if (tarif) {
+      document.getElementById('prev-fdp-enc').textContent = fmt(tarif.fdpEnc);
+      document.getElementById('prev-fdp-pay').textContent = tarif.fdpPay !== null ? fmt(tarif.fdpPay) : '?';
+      const marge = tarif.fdpPay !== null ? prix + tarif.fdpEnc - tarif.fdpPay : null;
+      const margeEl = document.getElementById('prev-total');
+      margeEl.textContent = marge !== null ? fmt(marge) : '?';
+      margeEl.className = marge !== null ? (marge >= 0 ? 'cval pos' : 'cval neg') : 'cval';
+    } else {
+      document.getElementById('prev-fdp-enc').textContent = '—';
+      document.getElementById('prev-fdp-pay').textContent = '—';
+      document.getElementById('prev-total').textContent   = '—';
+    }
+    document.getElementById('row-fdp-enc').style.display = 'flex';
+    document.getElementById('row-fdp-pay').style.display = 'flex';
+  } else if (currentType === 'physique') {
+    const qty = parseInt(document.getElementById('input-qty').value) || 1;
+    document.getElementById('prev-vinyl').textContent = fmt(prix * qty);
+    const margeEl = document.getElementById('prev-total');
+    margeEl.textContent = fmt(prix * qty);
+    margeEl.className = 'cval pos';
+    document.getElementById('row-fdp-enc').style.display = 'none';
+    document.getElementById('row-fdp-pay').style.display = 'none';
+  } else {
+    // distro
+    const qty = parseInt(document.getElementById('input-distro-qty').value) || 1;
+    document.getElementById('prev-vinyl').textContent = fmt(14 * qty);
+    const margeEl = document.getElementById('prev-total');
+    margeEl.textContent = fmt(14 * qty);
+    margeEl.className = 'cval pos';
+    document.getElementById('row-fdp-enc').style.display = 'none';
+    document.getElementById('row-fdp-pay').style.display = 'none';
+  }
+}
+
+// ── AJOUTER COMMANDE ────────────────────────────────────────────
+function addCommande() {
+  const today = new Date().toISOString().split('T')[0];
+
+  if (currentType === 'bigcartel') {
+    const num    = document.getElementById('input-num').value.trim();
+    const pays   = document.getElementById('input-pays').value;
+    const statut = document.getElementById('input-statut').value;
+    if (!num)  { shake('input-num');  return; }
+    if (!pays) { shake('input-pays'); return; }
+    commandes.push({ id: Date.now(), type:'bigcartel', num, pays, statut, date: today });
+    document.getElementById('input-num').value    = '';
+    document.getElementById('input-pays').value   = '';
+    document.getElementById('input-statut').value = 'en_attente';
+  } else if (currentType === 'physique') {
+    const qty  = parseInt(document.getElementById('input-qty').value) || 1;
+    const lieu = document.getElementById('input-lieu').value.trim();
+    commandes.push({ id: Date.now(), type:'physique', qty, lieu, date: today });
+    document.getElementById('input-qty').value  = 1;
+    document.getElementById('input-lieu').value = '';
+  } else {
+    const qty = parseInt(document.getElementById('input-distro-qty').value) || 1;
+    const nom = document.getElementById('input-distro-nom').value.trim();
+    commandes.push({ id: Date.now(), type:'distro', qty, nom, date: today });
+    document.getElementById('input-distro-qty').value = 1;
+    document.getElementById('input-distro-nom').value = '';
+  }
+
+  save();
+  updateStats();
+  renderHistory();
+  updatePreview();
+  showToast('✓ COMMANDE ENREGISTRÉE');
+}
+
+// ── SUPPRIMER ───────────────────────────────────────────────────
+function deleteCommande(id) {
+  commandes = commandes.filter(c => c.id !== id);
+  save();
+  updateStats();
+  renderHistory();
+}
+
+function clearAll() {
+  if (!confirm('Effacer tout l\'historique ?')) return;
+  commandes = [];
+  save();
+  updateStats();
+  renderHistory();
+}
+
+// ── STATS ───────────────────────────────────────────────────────
+function updateStats() {
+  const bc     = commandes.filter(c => c.type === 'bigcartel');
+  const ph     = commandes.filter(c => c.type === 'physique');
+  const distro = commandes.filter(c => c.type === 'distro');
+
+  const nbBC     = bc.length;
+  const nbPH     = ph.reduce((s,c) => s + (c.qty||1), 0);
+  const nbDistro = distro.reduce((s,c) => s + (c.qty||1), 0);
+  const total    = nbBC + nbPH + nbDistro;
+  const stock    = params.stock - total;
+
+  // Recettes
+  let recettesBC = 0, fdpPayes = 0;
+  bc.forEach(c => {
+    const t = TARIFS.find(t => t.pays === c.pays);
+    if (t) { recettesBC += params.prix + t.fdpEnc; if (t.fdpPay) fdpPayes += t.fdpPay; }
+    else     recettesBC += params.prix;
+  });
+  const recettesPH     = ph.reduce((s,c) => s + (c.qty||1)*params.prix, 0);
+  const recettesDistro = distro.reduce((s,c) => s + (c.qty||1)*14, 0);
+  const totalRec       = recettesBC + recettesPH + recettesDistro;
+  const balance        = totalRec - fdpPayes - params.invest;
+
+  document.getElementById('release-name').textContent   = params.nom;
+  document.getElementById('stat-stock').textContent     = stock;
+  document.getElementById('stat-stock-sub').textContent = `sur ${params.stock} initial`;
+  document.getElementById('stat-ventes').textContent    = total;
+  document.getElementById('stat-ventes-sub').textContent= `${nbBC} BC · ${nbPH} physique · ${nbDistro} distro`;
+  document.getElementById('stat-recettes').textContent  = fmt(totalRec);
+
+  const balEl = document.getElementById('stat-balance');
+  balEl.textContent = fmt(balance);
+  balEl.className   = 'stat-value ' + (balance >= 0 ? 'green' : 'red');
+  document.getElementById('stat-balance-sub').textContent =
+    balance >= 0 ? 'bénéfice' : `manque ${fmt(Math.abs(balance))}`;
+}
+
+// ── HISTORIQUE ──────────────────────────────────────────────────
+function setFilter(mode, btn) {
+  filterMode = mode;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHistory();
+}
+
+function renderHistory() {
+  const container = document.getElementById('history-table');
+  const filtered  = filterMode === 'all'
+    ? commandes
+    : commandes.filter(c => c.type === filterMode);
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="big">∅</div>
+        <p>Aucune vente enregistrée</p>
+      </div>`;
+    return;
+  }
+
+  const rows = [...filtered].reverse().map(c => {
+    if (c.type === 'bigcartel') {
+      const t = TARIFS.find(t => t.pays === c.pays);
+      const marge = t && t.fdpPay !== null ? fmt(params.prix + t.fdpEnc - t.fdpPay) : '?';
+      const fdp   = t && t.fdpPay !== null ? fmt(t.fdpPay) : '?';
+      const statutBadge = c.statut === 'envoye'
+        ? '<span style="color:var(--green);font-size:11px">✓ Envoyé</span>'
+        : '<span style="color:#f39c12;font-size:11px">⏳ En attente</span>';
+      return `<tr>
+        <td>${c.date}</td>
+        <td><span class="badge badge-bc">BIGCARTEL</span></td>
+        <td>#${c.num}</td>
+        <td>${c.pays}</td>
+        <td>${marge}</td>
+        <td style="color:var(--muted)">${fdp}</td>
+        <td>${statutBadge}</td>
+        <td><button class="del-btn" onclick="deleteCommande(${c.id})">✕</button></td>
+      </tr>`;
+    } else if (c.type === 'physique') {
+      const recette = fmt((c.qty||1) * params.prix);
+      const lieu    = c.lieu || '—';
+      return `<tr>
+        <td>${c.date}</td>
+        <td><span class="badge badge-ph">PHYSIQUE</span></td>
+        <td>${c.qty||1} ex.</td>
+        <td colspan="2">${lieu}</td>
+        <td>${recette}</td>
+        <td>—</td>
+        <td><button class="del-btn" onclick="deleteCommande(${c.id})">✕</button></td>
+      </tr>`;
+    } else {
+      const recette = fmt((c.qty||1) * 14);
+      return `<tr>
+        <td>${c.date}</td>
+        <td><span class="badge" style="background:rgba(0,200,255,0.15);color:#00c8ff">DISTRO</span></td>
+        <td>${c.qty||1} ex.</td>
+        <td colspan="2">${c.nom || '—'}</td>
+        <td>${recette}</td>
+        <td>—</td>
+        <td><button class="del-btn" onclick="deleteCommande(${c.id})">✕</button></td>
+      </tr>`;
+    }
+  }).join('');
+
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Canal</th>
+          <th>Ref</th>
+          <th>Pays / Lieu</th>
+          <th>Marge nette</th>
+          <th>FdP payé</th>
+          <th>Statut</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ── MODAL PARAMÈTRES ────────────────────────────────────────────
+function openModal() {
+  document.getElementById('p-nom').value    = params.nom;
+  document.getElementById('p-stock').value  = params.stock;
+  document.getElementById('p-prix').value   = params.prix;
+  document.getElementById('p-invest').value = params.invest;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function saveParams() {
+  params.nom    = document.getElementById('p-nom').value    || params.nom;
+  params.stock  = parseFloat(document.getElementById('p-stock').value)  || params.stock;
+  params.prix   = parseFloat(document.getElementById('p-prix').value)   || params.prix;
+  params.invest = parseFloat(document.getElementById('p-invest').value) || params.invest;
+  saveParamsToFB();
+  closeModal();
+  updateStats();
+  updatePreview();
+  showToast('✓ PARAMÈTRES SAUVEGARDÉS');
+}
+
+// ── UTILS ───────────────────────────────────────────────────────
+function fmt(n) { return n.toFixed(2).replace('.', ',') + ' €'; }
+
+function save() {
+  localStorage.setItem('bdc_commandes', JSON.stringify(commandes));
+  if (window._fbSaveCommandes) {
+    setSyncDot('syncing');
+    window._fbSaveCommandes(commandes).then(() => setSyncDot('synced')).catch(() => setSyncDot('error'));
+  }
+}
+
+function saveParamsToFB() {
+  localStorage.setItem('bdc_params', JSON.stringify(params));
+  if (window._fbSaveParams) {
+    setSyncDot('syncing');
+    window._fbSaveParams(params).then(() => setSyncDot('synced')).catch(() => setSyncDot('error'));
+  }
+}
+
+function shake(id) {
+  const el = document.getElementById(id);
+  el.style.borderColor = 'var(--red)';
+  setTimeout(() => el.style.borderColor = '', 1000);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── FIREBASE CALLBACKS ──────────────────────────────────────────
+window._fbOnCommandes = (data) => {
+  // Only update if data is different from local to avoid loop
+  if (JSON.stringify(data) !== JSON.stringify(commandes)) {
+    commandes = data;
+    localStorage.setItem('bdc_commandes', JSON.stringify(commandes));
+    updateStats();
+    renderHistory();
+    setSyncDot('synced');
+  }
+};
+
+window._fbOnParams = (data) => {
+  if (JSON.stringify(data) !== JSON.stringify(params)) {
+    params = data;
+    localStorage.setItem('bdc_params', JSON.stringify(params));
+    updateStats();
+    updatePreview();
+    document.getElementById('release-name').textContent = params.nom;
+    setSyncDot('synced');
+  }
+};
+
+// ── GO ──────────────────────────────────────────────────────────
+// Wait for Firebase, then init
+window.addEventListener('firebase-ready', () => {
+  firebaseReady = true;
+  setSyncDot('synced');
+});
+
+// Init immediately with local data, Firebase will sync on top
+init();
+</script>
+</body>
+</html>
