@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Born Dead Collective — Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+<!-- FIREBASE -->
 <script type="module">
-// ── FIREBASE CONFIG ─────────────────────────────────────────────
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyDCeyG4fRFUL4btxVIxz8LES0dq0rTyDMc",
   authDomain: "bdc10-moldy.firebaseapp.com",
@@ -18,555 +18,209 @@ const firebaseConfig = {
   messagingSenderId: "668393175395",
   appId: "1:668393175395:web:c5f745d75bedaafd85bb56"
 };
-
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
-const REF_COMMANDES = doc(db, 'bdc010', 'commandes');
-const REF_PARAMS    = doc(db, 'bdc010', 'params');
+const REF_C = doc(db, 'bdc', 'commandes');
+const REF_P = doc(db, 'bdc', 'params');
 
-// Expose Firebase functions to global scope for the main script
-window._fbSaveCommandes = async (data) => {
-  try { await setDoc(REF_COMMANDES, { data: JSON.stringify(data) }); } catch(e) { console.error('FB save commandes:', e); }
-};
+window._fbSaveCommandes = async (d) => { try { await setDoc(REF_C, { data: JSON.stringify(d) }); } catch(e) { console.error(e); } };
+window._fbSaveParams    = async (d) => { try { await setDoc(REF_P, { data: JSON.stringify(d) }); } catch(e) { console.error(e); } };
 
-window._fbSaveParams = async (data) => {
-  try { await setDoc(REF_PARAMS, { data: JSON.stringify(data) }); } catch(e) { console.error('FB save params:', e); }
-};
-
-// Listen for real-time updates
 window._fbInit = async () => {
-  // Load initial data
   try {
-    const snapC = await getDoc(REF_COMMANDES);
-    const snapP = await getDoc(REF_PARAMS);
-    if (snapC.exists()) window._fbOnCommandes(JSON.parse(snapC.data().data));
-    if (snapP.exists()) window._fbOnParams(JSON.parse(snapP.data().data));
-  } catch(e) { console.warn('FB init load:', e); }
-
-  // Real-time listener
-  onSnapshot(REF_COMMANDES, (snap) => {
-    if (snap.exists() && window._fbOnCommandes) {
-      window._fbOnCommandes(JSON.parse(snap.data().data));
-    }
-  });
-  onSnapshot(REF_PARAMS, (snap) => {
-    if (snap.exists() && window._fbOnParams) {
-      window._fbOnParams(JSON.parse(snap.data().data));
-    }
-  });
-
-  // Signal ready
+    const sc = await getDoc(REF_C);
+    const sp = await getDoc(REF_P);
+    if (sc.exists() && window._fbOnCommandes) window._fbOnCommandes(JSON.parse(sc.data().data));
+    if (sp.exists() && window._fbOnParams)    window._fbOnParams(JSON.parse(sp.data().data));
+  } catch(e) { console.warn('FB init:', e); }
+  onSnapshot(REF_C, s => { if (s.exists() && window._fbOnCommandes) window._fbOnCommandes(JSON.parse(s.data().data)); });
+  onSnapshot(REF_P, s => { if (s.exists() && window._fbOnParams)    window._fbOnParams(JSON.parse(s.data().data)); });
   window.dispatchEvent(new Event('firebase-ready'));
 };
-
 window._fbInit();
 </script>
+
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --bg: #0d0d0d;
-    --surface: #161616;
-    --surface2: #1e1e1e;
-    --border: #2a2a2a;
-    --accent: #e8ff00;
-    --accent2: #ff3c00;
-    --text: #e8e8e8;
-    --muted: #555;
-    --green: #39ff14;
-    --red: #ff3c00;
-    --font-display: 'Bebas Neue', sans-serif;
-    --font-mono: 'IBM Plex Mono', monospace;
-  }
+:root {
+  --bg: #f4f4f4;
+  --surface: #ffffff;
+  --surface2: #f0f0f0;
+  --border: #e0e0e0;
+  --text: #1a1a1a;
+  --muted: #999;
+  --green: #1a7a34;
+  --red: #c0392b;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-mono);
-    min-height: 100vh;
-    padding: 0;
-    overflow-x: hidden;
-  }
+body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; overflow-x: hidden; }
 
-  /* GRAIN */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-    opacity: 0.04;
-    pointer-events: none;
-    z-index: 999;
-  }
+/* HEADER */
+header {
+  background: var(--surface);
+  border-bottom: 2px solid #1a1a1a;
+  padding: 16px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-left .label-tag { font-family: var(--font-display); font-size: 13px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; }
+.header-left h1 { font-family: var(--font-display); font-size: 26px; letter-spacing: 4px; color: #1a1a1a; line-height: 1; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; transition: background 0.3s; }
+.sync-dot.synced { background: var(--green); }
+.sync-dot.syncing { background: #e67e22; animation: pulse 0.8s infinite; }
+.sync-dot.error { background: var(--red); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.release-badge { background: #1a1a1a; color: #fff; font-family: var(--font-display); font-size: 15px; letter-spacing: 2px; padding: 7px 16px; cursor: pointer; border: none; transition: background 0.15s; }
+.release-badge:hover { background: #444; }
 
-  /* HEADER */
-  header {
-    background: var(--surface);
-    border-bottom: 2px solid var(--accent);
-    padding: 18px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
+/* RELEASE TABS */
+.release-nav { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); padding: 0 32px; }
+.release-tab { font-family: var(--font-display); font-size: 14px; letter-spacing: 2px; padding: 12px 22px; cursor: pointer; color: var(--muted); border: none; border-bottom: 3px solid transparent; background: none; transition: all 0.15s; }
+.release-tab:hover { color: var(--text); }
+.release-tab.active { color: #1a1a1a; border-bottom: 3px solid #1a1a1a; }
+.release-tab .tab-sub { font-size: 9px; letter-spacing: 1px; display: block; color: var(--muted); font-family: var(--font-mono); margin-top: 2px; }
 
-  header h1 {
-    font-family: var(--font-display);
-    font-size: 28px;
-    letter-spacing: 4px;
-    color: var(--accent);
-    line-height: 1;
-  }
+/* STATS */
+.stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--border); background: var(--surface); }
+.stat { padding: 18px 28px; border-right: 1px solid var(--border); }
+.stat:last-child { border-right: none; }
+.stat-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+.stat-value { font-family: var(--font-display); font-size: 36px; line-height: 1; color: var(--text); }
+.stat-value.green { color: var(--green); }
+.stat-value.red   { color: var(--red); }
+.stat-sub { font-size: 10px; color: var(--muted); margin-top: 3px; }
 
-  header .label-tag {
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-top: 4px;
-  }
+/* MAIN */
+.main { display: grid; grid-template-columns: 360px 1fr; min-height: calc(100vh - 160px); }
 
-  .release-badge {
-    background: var(--accent);
-    color: #000;
-    font-family: var(--font-display);
-    font-size: 16px;
-    letter-spacing: 2px;
-    padding: 6px 14px;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .release-badge:hover { background: #fff; }
+/* PANEL GAUCHE */
+.panel-left { background: var(--surface); border-right: 1px solid var(--border); padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+.panel-title { font-family: var(--font-display); font-size: 18px; letter-spacing: 3px; color: #1a1a1a; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
 
-  /* STATS BAR */
-  .stats-bar {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    border-bottom: 1px solid var(--border);
-  }
+/* TYPE SELECTOR */
+.type-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.type-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-family: var(--font-display); font-size: 15px; letter-spacing: 2px; padding: 12px; cursor: pointer; text-align: center; transition: all 0.15s; }
+.type-btn:hover { border-color: #1a1a1a; color: #1a1a1a; }
+.type-btn.active { background: #1a1a1a; border-color: #1a1a1a; color: #fff; }
+.type-btn.full { grid-column: span 2; }
 
-  .stat {
-    padding: 20px 28px;
-    border-right: 1px solid var(--border);
-    position: relative;
-  }
-  .stat:last-child { border-right: none; }
+/* FORM */
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.form-group label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
+.form-group input, .form-group select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: var(--font-mono); font-size: 13px; padding: 10px 12px; outline: none; transition: border-color 0.15s; -webkit-appearance: none; }
+.form-group input:focus, .form-group select:focus { border-color: #1a1a1a; }
 
-  .stat-label {
-    font-size: 10px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
+/* CALC PREVIEW */
+.calc-preview { background: #f8f8f8; border: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 7px; }
+.calc-row { display: flex; justify-content: space-between; font-size: 11px; }
+.calc-row .clabel { color: var(--muted); }
+.calc-row .cval { font-weight: 600; }
+.calc-row .cval.pos { color: var(--green); }
+.calc-row .cval.neg { color: var(--red); }
+.calc-divider { border-top: 1px solid var(--border); margin: 2px 0; }
 
-  .stat-value {
-    font-family: var(--font-display);
-    font-size: 38px;
-    line-height: 1;
-    color: var(--text);
-  }
+.btn-add { background: #1a1a1a; color: #fff; border: none; font-family: var(--font-display); font-size: 20px; letter-spacing: 4px; padding: 14px; cursor: pointer; width: 100%; transition: background 0.15s; }
+.btn-add:hover { background: #333; }
 
-  .stat-value.green { color: var(--green); }
-  .stat-value.red   { color: var(--red); }
-  .stat-value.yellow { color: var(--accent); }
+/* PANEL DROIT */
+.panel-right { display: flex; flex-direction: column; }
+.history-header { padding: 18px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.history-title { font-family: var(--font-display); font-size: 18px; letter-spacing: 3px; color: #1a1a1a; }
+.btn-clear { font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); background: none; border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; transition: all 0.15s; }
+.btn-clear:hover { border-color: var(--red); color: var(--red); }
 
-  .stat-sub {
-    font-size: 10px;
-    color: var(--muted);
-    margin-top: 4px;
-  }
+.filter-bar { display: flex; border-bottom: 1px solid var(--border); }
+.filter-btn { background: none; border: none; border-right: 1px solid var(--border); color: var(--muted); font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 9px 16px; cursor: pointer; transition: all 0.15s; }
+.filter-btn:hover { color: var(--text); }
+.filter-btn.active { color: #1a1a1a; border-bottom: 2px solid #1a1a1a; }
 
-  /* MAIN LAYOUT */
-  .main {
-    display: grid;
-    grid-template-columns: 380px 1fr;
-    min-height: calc(100vh - 140px);
-  }
+.history-table { flex: 1; overflow-y: auto; }
+.history-table table { width: 100%; border-collapse: collapse; }
+.history-table th { background: #f8f8f8; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 10px 14px; text-align: left; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid var(--border); }
+.history-table td { padding: 10px 14px; font-size: 11px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+.history-table tr:hover td { background: #fafafa; }
 
-  /* PANEL GAUCHE — SAISIE */
-  .panel-left {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    padding: 28px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
+.badge { font-size: 9px; letter-spacing: 1px; padding: 3px 7px; text-transform: uppercase; font-weight: 600; white-space: nowrap; }
+.badge-bc { background: #f0f0f0; color: #1a1a1a; border: 1px solid #ccc; }
+.badge-ph { background: #fce8e6; color: #c0392b; border: 1px solid #f5b8b0; }
+.badge-distro { background: #e8f4fd; color: #1a6ea8; }
 
-  .panel-title {
-    font-family: var(--font-display);
-    font-size: 20px;
-    letter-spacing: 3px;
-    color: var(--accent);
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 12px;
-  }
+.statut-btn { background: none; border: 1px solid transparent; cursor: pointer; font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; transition: all 0.15s; white-space: nowrap; }
+.statut-btn.envoye  { color: var(--green); border-color: rgba(26,122,52,0.3); }
+.statut-btn.attente { color: #e67e22; border-color: rgba(230,126,34,0.3); }
+.statut-btn:hover { opacity: 0.7; }
 
-  /* TYPE SELECTOR */
-  .type-selector {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
+.del-btn  { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px; padding: 3px 6px; transition: color 0.15s; }
+.del-btn:hover  { color: var(--red); }
+.edit-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 11px; padding: 3px 6px; transition: color 0.15s; font-family: var(--font-mono); }
+.edit-btn:hover { color: #1a1a1a; }
 
-  .type-btn {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: var(--font-display);
-    font-size: 18px;
-    letter-spacing: 2px;
-    padding: 16px;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.15s;
-    user-select: none;
-  }
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; color: var(--muted); gap: 10px; }
+.empty-state .big { font-family: var(--font-display); font-size: 48px; opacity: 0.2; }
+.empty-state p { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; }
 
-  .type-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: #fff; border: 1px solid var(--border); padding: 28px; width: 440px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+.modal h2 { font-family: var(--font-display); font-size: 20px; letter-spacing: 3px; color: #1a1a1a; margin-bottom: 18px; }
+.modal .form-group { margin-bottom: 12px; margin-top: 0; }
+.modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+.btn-save { flex: 1; background: #1a1a1a; color: #fff; border: none; font-family: var(--font-display); font-size: 17px; letter-spacing: 2px; padding: 12px; cursor: pointer; }
+.btn-save:hover { background: #333; }
+.btn-cancel { background: none; border: 1px solid var(--border); color: var(--muted); font-family: var(--font-mono); font-size: 11px; padding: 12px 16px; cursor: pointer; transition: all 0.15s; }
+.btn-cancel:hover { border-color: var(--red); color: var(--red); }
+.modal-section { font-family: var(--font-display); font-size: 13px; letter-spacing: 2px; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin: 16px 0 10px; }
 
-  .type-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #000;
-  }
+/* DEVISE SELECTOR */
+.devise-row { display: flex; gap: 8px; }
+.devise-row input { flex: 1; }
+.devise-row select { width: 90px; flex-shrink: 0; }
 
-  .type-btn .icon {
-    display: block;
-    font-size: 28px;
-    margin-bottom: 6px;
-  }
+/* TOAST */
+.toast { position: fixed; bottom: 24px; right: 24px; background: #1a1a1a; color: #fff; font-family: var(--font-display); font-size: 15px; letter-spacing: 2px; padding: 12px 20px; z-index: 200; transform: translateY(80px); opacity: 0; transition: all 0.3s; }
+.toast.show { transform: translateY(0); opacity: 1; }
 
-  /* FORM */
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .form-group label {
-    font-size: 10px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .form-group input,
-  .form-group select {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 14px;
-    padding: 12px 14px;
-    outline: none;
-    transition: border-color 0.15s;
-    -webkit-appearance: none;
-  }
-
-  .form-group input:focus,
-  .form-group select:focus {
-    border-color: var(--accent);
-  }
-
-  .form-group select option {
-    background: var(--surface2);
-  }
-
-  /* INFO CALC */
-  .calc-preview {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .calc-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-  }
-
-  .calc-row .clabel { color: var(--muted); }
-  .calc-row .cval   { color: var(--text); font-weight: 600; }
-  .calc-row .cval.pos { color: var(--green); }
-  .calc-row .cval.neg { color: var(--red); }
-
-  .calc-divider {
-    border-top: 1px solid var(--border);
-    margin: 2px 0;
-  }
-
-  /* BOUTON VALIDER */
-  .btn-add {
-    background: var(--accent);
-    color: #000;
-    border: none;
-    font-family: var(--font-display);
-    font-size: 22px;
-    letter-spacing: 4px;
-    padding: 16px;
-    cursor: pointer;
-    transition: all 0.15s;
-    width: 100%;
-  }
-
-  .btn-add:hover { background: #fff; }
-  .btn-add:active { transform: scale(0.98); }
-  .btn-add:disabled {
-    background: var(--border);
-    color: var(--muted);
-    cursor: not-allowed;
-  }
-
-  /* PANEL DROIT — HISTORIQUE */
-  .panel-right {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .history-header {
-    padding: 20px 28px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .history-title {
-    font-family: var(--font-display);
-    font-size: 20px;
-    letter-spacing: 3px;
-    color: var(--accent);
-  }
-
-  .btn-clear {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--muted);
-    background: none;
-    border: 1px solid var(--border);
-    padding: 6px 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-clear:hover { border-color: var(--red); color: var(--red); }
-
-  /* FILTRE */
-  .filter-bar {
-    display: flex;
-    gap: 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .filter-btn {
-    background: none;
-    border: none;
-    border-right: 1px solid var(--border);
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    padding: 10px 18px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .filter-btn:hover { color: var(--text); }
-  .filter-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
-
-  /* TABLE */
-  .history-table {
-    flex: 1;
-    overflow-y: auto;
-  }
-
-  .history-table table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .history-table th {
-    background: var(--surface);
-    font-size: 9px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 10px 16px;
-    text-align: left;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .history-table td {
-    padding: 12px 16px;
-    font-size: 12px;
-    border-bottom: 1px solid #1a1a1a;
-  }
-
-  .history-table tr:hover td { background: var(--surface2); }
-
-  .badge {
-    font-size: 9px;
-    letter-spacing: 2px;
-    padding: 3px 8px;
-    text-transform: uppercase;
-    font-weight: 600;
-  }
-
-  .badge-bc { background: rgba(232,255,0,0.15); color: var(--accent); }
-  .badge-ph { background: rgba(255,60,0,0.15); color: var(--accent2); }
-
-  .del-btn {
-    background: none;
-    border: none;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 14px;
-    padding: 4px 8px;
-    transition: color 0.15s;
-  }
-  .del-btn:hover { color: var(--red); }
-
-  /* EMPTY STATE */
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px;
-    color: var(--muted);
-    gap: 12px;
-    flex: 1;
-  }
-
-  .empty-state .big { font-family: var(--font-display); font-size: 48px; opacity: 0.2; }
-  .empty-state p { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
-
-  /* MODAL RELEASE */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal-overlay.open { display: flex; }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--accent);
-    padding: 32px;
-    width: 420px;
-    max-width: 90vw;
-  }
-
-  .modal h2 {
-    font-family: var(--font-display);
-    font-size: 22px;
-    letter-spacing: 3px;
-    color: var(--accent);
-    margin-bottom: 20px;
-  }
-
-  .modal .form-group { margin-bottom: 16px; }
-
-  .modal-btns {
-    display: flex;
-    gap: 10px;
-    margin-top: 24px;
-  }
-
-  .btn-save {
-    flex: 1;
-    background: var(--accent);
-    color: #000;
-    border: none;
-    font-family: var(--font-display);
-    font-size: 18px;
-    letter-spacing: 2px;
-    padding: 12px;
-    cursor: pointer;
-  }
-
-  .btn-cancel {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    padding: 12px 18px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-cancel:hover { border-color: var(--red); color: var(--red); }
-
-  /* TOAST */
-  /* SYNC INDICATOR */
-  .sync-dot {
-    display: inline-block;
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--muted);
-    margin-left: 10px;
-    vertical-align: middle;
-    transition: background 0.3s;
-  }
-  .sync-dot.synced  { background: var(--green); }
-  .sync-dot.syncing { background: #f39c12; animation: pulse 0.8s infinite; }
-  .sync-dot.error   { background: var(--red); }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--accent);
-    color: #000;
-    font-family: var(--font-display);
-    font-size: 16px;
-    letter-spacing: 2px;
-    padding: 12px 20px;
-    z-index: 200;
-    transform: translateY(80px);
-    opacity: 0;
-    transition: all 0.3s;
-  }
-  .toast.show { transform: translateY(0); opacity: 1; }
-
-  @media (max-width: 800px) {
-    .main { grid-template-columns: 1fr; }
-    .stats-bar { grid-template-columns: repeat(2, 1fr); }
-    .panel-left { border-right: none; border-bottom: 1px solid var(--border); }
-  }
+@media (max-width: 800px) {
+  .main { grid-template-columns: 1fr; }
+  .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  .panel-left { border-right: none; border-bottom: 1px solid var(--border); }
+  .release-nav { padding: 0 16px; }
+  .release-tab { padding: 10px 14px; font-size: 12px; }
+}
 </style>
 </head>
 <body>
 
 <header>
-  <div>
-    <div class="label-tag">Label Tracker</div>
-    <h1 id="release-name">BDC-010</h1><span class="sync-dot" id="sync-dot" title="Synchronisation Firebase"></span>
+  <div class="header-left">
+    <div class="label-tag">TRACKER SORTIE BORN DEAD COLLECTIVE</div>
   </div>
-  <button class="release-badge" onclick="openModal()">⚙ PARAMÈTRES</button>
+  <div class="header-right">
+    <span class="sync-dot" id="sync-dot" title="Sync Firebase"></span>
+    <button class="release-badge" onclick="openModal()">PARAMETRES</button>
+  </div>
 </header>
+
+<div class="release-nav">
+  <button class="release-tab active" onclick="switchRelease('bdc010', this)">
+    BDC-010<span class="tab-sub">Moldy — Do Not Resuscitate</span>
+  </button>
+  <button class="release-tab" onclick="switchRelease('bdc012', this)">
+    BDC-012<span class="tab-sub">Corruption Pact — Unanswered Cries</span>
+  </button>
+  <button class="release-tab" onclick="switchRelease('bdc013', this)">
+    BDC-013<span class="tab-sub">Take it in Blood — Exit from Life</span>
+  </button>
+</div>
 
 <div class="stats-bar">
   <div class="stat">
     <div class="stat-label">Stock restant</div>
-    <div class="stat-value yellow" id="stat-stock">—</div>
+    <div class="stat-value" id="stat-stock">—</div>
     <div class="stat-sub" id="stat-stock-sub"></div>
   </div>
   <div class="stat">
@@ -577,7 +231,7 @@ window._fbInit();
   <div class="stat">
     <div class="stat-label">Recettes</div>
     <div class="stat-value" id="stat-recettes">—</div>
-    <div class="stat-sub">vinyles + fdp</div>
+    <div class="stat-sub">toutes ventes</div>
   </div>
   <div class="stat">
     <div class="stat-label">Balance</div>
@@ -590,130 +244,144 @@ window._fbInit();
 
   <!-- PANNEAU SAISIE -->
   <div class="panel-left">
-    <div class="panel-title">NOUVELLE COMMANDE</div>
+    <div class="panel-title">NOUVELLE VENTE</div>
 
     <div class="type-selector">
-      <div class="type-btn active" id="btn-bc" onclick="setType('bigcartel')">
-        <span class="icon">🌐</span>
-        BIGCARTEL
-      </div>
-      <div class="type-btn" id="btn-ph" onclick="setType('physique')">
-        <span class="icon">🤘</span>
-        PHYSIQUE
-      </div>
-      <div class="type-btn" id="btn-distro" onclick="setType('distro')" style="grid-column: span 2;">
-        <span class="icon">📦</span>
-        DISTRO / SHOP
-      </div>
+      <div class="type-btn active" id="btn-bc"     onclick="setType('bigcartel')">BIGCARTEL</div>
+      <div class="type-btn"        id="btn-ph"     onclick="setType('physique')">PHYSIQUE</div>
+      <div class="type-btn full"   id="btn-distro" onclick="setType('distro')">DISTRO / SHOP</div>
     </div>
 
+    <!-- BIGCARTEL -->
     <div id="form-bc">
       <div class="form-group">
         <label>N° de commande</label>
         <input type="text" id="input-num" placeholder="ex: 15" />
       </div>
-      <div class="form-group" style="margin-top:12px">
+      <div class="form-group">
         <label>Pays d'expédition</label>
-        <select id="input-pays">
-          <option value="">— Choisir un pays —</option>
-        </select>
+        <select id="input-pays"><option value="">— Choisir —</option></select>
       </div>
-      <div class="form-group" style="margin-top:12px">
+      <div class="form-group">
         <label>Statut</label>
         <select id="input-statut">
-          <option value="en_attente">⏳ En attente d'envoi</option>
-          <option value="envoye">✓ Envoyé</option>
+          <option value="en_attente">En attente d'envoi</option>
+          <option value="envoye">Envoyé</option>
         </select>
       </div>
+      <div class="form-group">
+        <label>Note (optionnel)</label>
+        <input type="text" id="input-note-bc" placeholder="ex: adresse incorrecte..." />
+      </div>
     </div>
 
+    <!-- PHYSIQUE -->
     <div id="form-ph" style="display:none">
       <div class="form-group">
-        <label>Quantité vendue</label>
-        <input type="number" id="input-qty" placeholder="ex: 1" min="1" value="1" />
+        <label>Quantité</label>
+        <input type="number" id="input-qty" min="1" value="1" />
       </div>
-      <div class="form-group" style="margin-top:12px">
-        <label>Lieu / Événement (optionnel)</label>
-        <input type="text" id="input-lieu" placeholder="ex: Gibus, Paris" />
+      <div class="form-group">
+        <label>Lieu / Événement</label>
+        <input type="text" id="input-lieu" placeholder="ex: Glazart, Paris" />
+      </div>
+      <div class="form-group">
+        <label>Paiement</label>
+        <select id="input-paiement">
+          <option value="cash">Cash</option>
+          <option value="paypal">PayPal</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Note (optionnel)</label>
+        <input type="text" id="input-note-ph" placeholder="" />
       </div>
     </div>
 
+    <!-- DISTRO -->
     <div id="form-distro" style="display:none">
       <div class="form-group">
-        <label>Nom du distro / shop</label>
-        <input type="text" id="input-distro-nom" placeholder="ex: React Records" />
+        <label>Nom distro / shop</label>
+        <input type="text" id="input-distro-nom" placeholder="ex: MerchPit" />
       </div>
-      <div class="form-group" style="margin-top:12px">
+      <div class="form-group">
         <label>Quantité</label>
-        <input type="number" id="input-distro-qty" placeholder="ex: 5" min="1" value="1" />
+        <input type="number" id="input-distro-qty" min="1" value="1" />
+      </div>
+      <div class="form-group">
+        <label>Prix unitaire + devise</label>
+        <div class="devise-row">
+          <input type="number" id="input-distro-prix" step="0.01" placeholder="ex: 14" />
+          <select id="input-distro-devise">
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="USD">USD</option>
+            <option value="JPY">JPY</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Note (optionnel)</label>
+        <input type="text" id="input-note-distro" placeholder="ex: payé / en attente..." />
       </div>
     </div>
 
-    <!-- APERÇU CALCUL -->
-    <div class="calc-preview" id="calc-preview">
+    <!-- APERCU -->
+    <div class="calc-preview">
       <div class="calc-row">
         <span class="clabel">Recette vinyle</span>
         <span class="cval" id="prev-vinyl">—</span>
       </div>
-      <div class="calc-row" id="row-fdp-enc" style="display:none">
+      <div class="calc-row" id="row-fdp-enc">
         <span class="clabel">FdP encaissé</span>
         <span class="cval" id="prev-fdp-enc">—</span>
       </div>
-      <div class="calc-row" id="row-fdp-pay" style="display:none">
+      <div class="calc-row" id="row-fdp-pay">
         <span class="clabel">FdP payé (Mondial Relay)</span>
         <span class="cval" id="prev-fdp-pay">—</span>
       </div>
-      <div class="calc-divider"></div>
+      <div class="calc-row" id="row-taux" style="display:none">
+        <span class="clabel">Taux de change</span>
+        <span class="cval" id="prev-taux">—</span>
+      </div>
       <div class="calc-divider"></div>
       <div class="calc-row">
-        <span class="clabel">Marge nette</span>
+        <span class="clabel" id="prev-total-label">Marge nette</span>
         <span class="cval pos" id="prev-total">—</span>
       </div>
     </div>
 
-    <button class="btn-add" id="btn-valider" onclick="addCommande()">+ ENREGISTRER</button>
+    <button class="btn-add" onclick="addCommande()">+ ENREGISTRER</button>
   </div>
 
-  <!-- PANNEAU HISTORIQUE -->
+  <!-- HISTORIQUE -->
   <div class="panel-right">
     <div class="history-header">
       <div class="history-title">HISTORIQUE</div>
-      <button class="btn-clear" onclick="clearAll()">⚠ TOUT EFFACER</button>
+      <button class="btn-clear" onclick="clearAll()">TOUT EFFACER</button>
     </div>
-
     <div class="filter-bar">
       <button class="filter-btn active" onclick="setFilter('all', this)">Tout</button>
       <button class="filter-btn" onclick="setFilter('bigcartel', this)">Bigcartel</button>
       <button class="filter-btn" onclick="setFilter('physique', this)">Physique</button>
       <button class="filter-btn" onclick="setFilter('distro', this)">Distro</button>
     </div>
-
-    <div class="history-table" id="history-table">
-      <!-- rempli par JS -->
-    </div>
+    <div class="history-table" id="history-table"></div>
   </div>
 </div>
 
-<!-- MODAL PARAMÈTRES -->
+<!-- MODAL PARAMETRES -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
-    <h2>⚙ PARAMÈTRES RELEASE</h2>
-    <div class="form-group">
-      <label>Nom de la release</label>
-      <input type="text" id="p-nom" placeholder="ex: BDC-010" />
-    </div>
-    <div class="form-group">
-      <label>Stock initial</label>
-      <input type="number" id="p-stock" placeholder="ex: 220" />
-    </div>
-    <div class="form-group">
-      <label>Prix de vente (€)</label>
-      <input type="number" id="p-prix" placeholder="ex: 20" step="0.01" />
-    </div>
-    <div class="form-group">
-      <label>Investissement total (€)</label>
-      <input type="number" id="p-invest" placeholder="ex: 2019.02" step="0.01" />
-    </div>
+    <h2>PARAMETRES RELEASE</h2>
+    <div class="modal-section">Infos</div>
+    <div class="form-group"><label>Nom release</label><input type="text" id="p-nom" /></div>
+    <div class="form-group"><label>Stock initial</label><input type="number" id="p-stock" /></div>
+    <div class="modal-section">Prix de vente</div>
+    <div class="form-group"><label>Prix Bigcartel / Physique (€)</label><input type="number" id="p-prix" step="0.01" /></div>
+    <div class="form-group"><label>Prix groupe (€)</label><input type="number" id="p-prix-groupe" step="0.01" /></div>
+    <div class="modal-section">Finances</div>
+    <div class="form-group"><label>Investissement total (€)</label><input type="number" id="p-invest" step="0.01" /></div>
     <div class="modal-btns">
       <button class="btn-save" onclick="saveParams()">SAUVEGARDER</button>
       <button class="btn-cancel" onclick="closeModal()">ANNULER</button>
@@ -721,63 +389,149 @@ window._fbInit();
   </div>
 </div>
 
+<!-- MODAL EDITION -->
+<div class="modal-overlay" id="modal-edit">
+  <div class="modal">
+    <h2>EDITER LA COMMANDE</h2>
+    <div id="edit-form-bc">
+      <div class="form-group"><label>N° commande</label><input type="text" id="edit-num" /></div>
+      <div class="form-group"><label>Pays</label><select id="edit-pays"></select></div>
+      <div class="form-group"><label>Date</label><input type="date" id="edit-date" /></div>
+      <div class="form-group"><label>Statut</label>
+        <select id="edit-statut">
+          <option value="en_attente">En attente d'envoi</option>
+          <option value="envoye">Envoyé</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Note</label><input type="text" id="edit-note-bc" /></div>
+    </div>
+    <div id="edit-form-ph" style="display:none">
+      <div class="form-group"><label>Quantité</label><input type="number" id="edit-qty" min="1" /></div>
+      <div class="form-group"><label>Lieu</label><input type="text" id="edit-lieu" /></div>
+      <div class="form-group"><label>Paiement</label>
+        <select id="edit-paiement">
+          <option value="cash">Cash</option>
+          <option value="paypal">PayPal</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Date</label><input type="date" id="edit-date-ph" /></div>
+      <div class="form-group"><label>Note</label><input type="text" id="edit-note-ph" /></div>
+    </div>
+    <div id="edit-form-distro" style="display:none">
+      <div class="form-group"><label>Nom distro</label><input type="text" id="edit-distro-nom" /></div>
+      <div class="form-group"><label>Quantité</label><input type="number" id="edit-distro-qty" min="1" /></div>
+      <div class="form-group"><label>Prix unitaire</label><input type="number" id="edit-distro-prix" step="0.01" /></div>
+      <div class="form-group"><label>Devise</label>
+        <select id="edit-distro-devise">
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+          <option value="USD">USD</option>
+          <option value="JPY">JPY</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Date</label><input type="date" id="edit-date-distro" /></div>
+      <div class="form-group"><label>Note</label><input type="text" id="edit-note-distro" /></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-save" onclick="saveEdit()">SAUVEGARDER</button>
+      <button class="btn-cancel" onclick="closeEditModal()">ANNULER</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ── SYNC STATE ──────────────────────────────────────────────────
-let firebaseReady = false;
-let pendingSync   = false;
-
-function setSyncDot(state) {
-  const dot = document.getElementById('sync-dot');
-  if (dot) { dot.className = 'sync-dot ' + state; }
-}
-
 // ── TARIFS FDP ──────────────────────────────────────────────────
 const TARIFS = [
-  { pays: "France",         fdpEnc: 6.00,  fdpPay: 4.10,  livraison: "Point Relais" },
-  { pays: "Belgique",       fdpEnc: 8.00,  fdpPay: 4.60,  livraison: "Point Relais" },
-  { pays: "Espagne",        fdpEnc: 8.50,  fdpPay: 6.60,  livraison: "Point Relais" },
-  { pays: "Allemagne",      fdpEnc: 14.00, fdpPay: 12.50, livraison: "Domicile" },
-  { pays: "Italie",         fdpEnc: 8.50,  fdpPay: 6.60,  livraison: "Point Relais" },
-  { pays: "Pays-Bas",       fdpEnc: 7.50,  fdpPay: 4.60,  livraison: "Point Relais" },
-  { pays: "Autriche",       fdpEnc: 16.00, fdpPay: 16.00, livraison: "Domicile" },
-  { pays: "Luxembourg",     fdpEnc: 8.00,  fdpPay: 4.60,  livraison: "Point Relais" },
-  { pays: "Portugal",       fdpEnc: 8.00,  fdpPay: 6.60,  livraison: "Point Relais" },
-  { pays: "Pologne",        fdpEnc: 9.00,  fdpPay: 7.20,  livraison: "Point Relais" },
-  { pays: "United Kingdom", fdpEnc: 20.00, fdpPay: null,   livraison: "Domicile" },
+  { pays: "France",         fdpEnc: 6.00,  fdpPay: 4.10  },
+  { pays: "Belgique",       fdpEnc: 8.00,  fdpPay: 4.60  },
+  { pays: "Espagne",        fdpEnc: 8.50,  fdpPay: 6.60  },
+  { pays: "Allemagne",      fdpEnc: 14.00, fdpPay: 12.50 },
+  { pays: "Italie",         fdpEnc: 8.50,  fdpPay: 6.60  },
+  { pays: "Pays-Bas",       fdpEnc: 7.50,  fdpPay: 4.60  },
+  { pays: "Autriche",       fdpEnc: 16.00, fdpPay: 16.00 },
+  { pays: "Luxembourg",     fdpEnc: 8.00,  fdpPay: 4.60  },
+  { pays: "Portugal",       fdpEnc: 8.00,  fdpPay: 6.60  },
+  { pays: "Pologne",        fdpEnc: 9.00,  fdpPay: 7.20  },
+  { pays: "United Kingdom", fdpEnc: 20.00, fdpPay: null   },
 ];
 
-// ── STATE ───────────────────────────────────────────────────────
-let params = JSON.parse(localStorage.getItem('bdc_params') || 'null') || {
-  nom: 'BDC-010', stock: 220, prix: 20, invest: 2019.02
+// ── RELEASES CONFIG ──────────────────────────────────────────────
+const RELEASES_DEF = {
+  bdc010: { nom: 'BDC-010', groupe: 'Moldy',             titre: 'Do Not Resuscitate',  stock: 220, prix: 20, prixGroupe: 16, invest: 2019.02 },
+  bdc012: { nom: 'BDC-012', groupe: 'Corruption Pact',   titre: 'Unanswered Cries',    stock: 100, prix: 25, prixGroupe: 16, invest: 1512.84 },
+  bdc013: { nom: 'BDC-013', groupe: 'Take it in Blood',  titre: 'Exit from Life',      stock: 200, prix: 25, prixGroupe: 16, invest: 1437.60 },
 };
-let commandes = JSON.parse(localStorage.getItem('bdc_commandes') || '[]');
-// Données existantes pré-chargées si vide
-if (commandes.length === 0) {
-  let id = 1000;
-  // 10 France envoyées
-  for (let i=1;i<=10;i++) commandes.push({ id:id++, type:'bigcartel', num:String(i), pays:'France', statut:'envoye', date:'2026-01-15' });
-  // 2 Belgique envoyées
-  commandes.push({ id:id++, type:'bigcartel', num:'11', pays:'Belgique', statut:'envoye', date:'2026-01-20' });
-  commandes.push({ id:id++, type:'bigcartel', num:'12', pays:'Belgique', statut:'envoye', date:'2026-01-22' });
-  // 1 Belgique en attente
-  commandes.push({ id:id++, type:'bigcartel', num:'13', pays:'Belgique', statut:'en_attente', date:'2026-03-20' });
-  // 1 Espagne en attente
-  commandes.push({ id:id++, type:'bigcartel', num:'14', pays:'Espagne', statut:'en_attente', date:'2026-03-21' });
-  // 10 physique concert
-  for (let i=0;i<10;i++) commandes.push({ id:id++, type:'physique', qty:1, lieu:'Concert', date:'2026-01-10' });
-  // 3 distro
-  commandes.push({ id:id++, type:'distro', qty:3, nom:'Distro', date:'2026-02-01' });
-  save();
+
+// ── STATE ────────────────────────────────────────────────────────
+let currentRelease = localStorage.getItem('bdc_current_release') || 'bdc010';
+let allParams      = JSON.parse(localStorage.getItem('bdc_all_params')    || 'null') || JSON.parse(JSON.stringify(RELEASES_DEF));
+let allCommandes   = JSON.parse(localStorage.getItem('bdc_all_commandes') || 'null') || { bdc010: [], bdc012: [], bdc013: [] };
+
+// Migrate old single-release data
+if (localStorage.getItem('bdc_commandes')) {
+  allCommandes['bdc010'] = JSON.parse(localStorage.getItem('bdc_commandes') || '[]');
+  localStorage.removeItem('bdc_commandes');
+  saveAll();
 }
+
+let params    = allParams[currentRelease]    || JSON.parse(JSON.stringify(RELEASES_DEF[currentRelease]));
+let commandes = allCommandes[currentRelease] || [];
 
 let currentType = 'bigcartel';
 let filterMode  = 'all';
+let fxRates     = {}; // cache taux de change
 
-// ── INIT ────────────────────────────────────────────────────────
-function init() {
-  // Remplir dropdown pays
+// BDC-010 pré-chargé si vide
+if (allCommandes['bdc010'].length === 0) {
+  let id = 1000;
+  // BIGCARTEL (14 commandes)
+  for (let i=1;i<=10;i++) allCommandes['bdc010'].push({ id:id++, type:'bigcartel', num:String(i), pays:'France',   statut:'envoye',     date:'2026-01-15' });
+  allCommandes['bdc010'].push({ id:id++, type:'bigcartel', num:'11', pays:'Belgique', statut:'envoye',     date:'2026-01-20' });
+  allCommandes['bdc010'].push({ id:id++, type:'bigcartel', num:'12', pays:'Belgique', statut:'envoye',     date:'2026-01-22' });
+  allCommandes['bdc010'].push({ id:id++, type:'bigcartel', num:'13', pays:'Belgique', statut:'en_attente', date:'2026-03-20' });
+  allCommandes['bdc010'].push({ id:id++, type:'bigcartel', num:'14', pays:'Espagne',  statut:'en_attente', date:'2026-03-21' });
+  // PHYSIQUE (15 ventes)
+  for (let i=0;i<10;i++) allCommandes['bdc010'].push({ id:id++, type:'physique', qty:1, lieu:'Concert',         paiement:'cash', date:'2026-01-10' });
+  allCommandes['bdc010'].push({ id:id++, type:'physique', qty:1, lieu:'Le Sample',       paiement:'cash', date:'2026-03-28' });
+  allCommandes['bdc010'].push({ id:id++, type:'physique', qty:2, lieu:'Concert Deviant',  paiement:'cash', date:'2026-03-27' });
+  allCommandes['bdc010'].push({ id:id++, type:'physique', qty:1, lieu:'Show Arkangel',    paiement:'cash', date:'2026-04-17' });
+  allCommandes['bdc010'].push({ id:id++, type:'physique', qty:1, lieu:'Show Arkangel',    paiement:'cash', date:'2026-04-20' });
+  // DISTRO (11 copies)
+  allCommandes['bdc010'].push({ id:id++, type:'distro', qty:3, nom:'AWAM',              devise:'EUR', prixUnit:14, tauxEUR:1, date:'2026-03-25' });
+  allCommandes['bdc010'].push({ id:id++, type:'distro', qty:8, nom:'Guillotine Records', devise:'EUR', prixUnit:14, tauxEUR:1, date:'2026-05-05' });
+  commandes = allCommandes[currentRelease];
+  saveAll();
+}
+
+// ── TAUX DE CHANGE ───────────────────────────────────────────────
+async function fetchFXRates() {
+  try {
+    const r = await fetch('https://api.frankfurter.app/latest?from=EUR&to=GBP,USD,JPY');
+    const d = await r.json();
+    fxRates = d.rates; // { GBP: 0.85, USD: 1.08, JPY: 163 }
+    fxRates['EUR'] = 1;
+  } catch(e) { console.warn('FX fetch failed:', e); fxRates = { EUR:1, GBP:0.85, USD:1.08, JPY:163 }; }
+}
+
+function toEUR(amount, devise) {
+  if (devise === 'EUR' || !devise) return amount;
+  const rate = fxRates[devise];
+  return rate ? amount / rate : amount;
+}
+
+function fmtDevise(amount, devise) {
+  if (devise === 'EUR' || !devise) return fmt(amount);
+  const symbols = { GBP: '£', USD: '$', JPY: '¥' };
+  return (symbols[devise] || '') + amount.toFixed(2);
+}
+
+// ── INIT ─────────────────────────────────────────────────────────
+async function init() {
+  await fetchFXRates();
+
+  // Dropdown pays saisie
   const sel = document.getElementById('input-pays');
   TARIFS.forEach(t => {
     const o = document.createElement('option');
@@ -787,122 +541,165 @@ function init() {
 
   document.getElementById('input-pays').addEventListener('change', updatePreview);
   document.getElementById('input-qty').addEventListener('input', updatePreview);
+  document.getElementById('input-distro-qty').addEventListener('input', updatePreview);
+  document.getElementById('input-distro-prix').addEventListener('input', updatePreview);
+  document.getElementById('input-distro-devise').addEventListener('change', updatePreview);
 
+  // Activer le bon onglet release
+  document.querySelectorAll('.release-tab').forEach(btn => {
+    if (btn.getAttribute('onclick').includes(currentRelease)) btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+
+  const rn = document.getElementById('release-name'); if(rn) rn.textContent = params.nom;
   updateStats();
   renderHistory();
   updatePreview();
 }
 
-// ── TYPE SWITCH ─────────────────────────────────────────────────
-function setType(type) {
-  currentType = type;
-  document.getElementById('btn-bc').classList.toggle('active', type==='bigcartel');
-  document.getElementById('btn-ph').classList.toggle('active', type==='physique');
-  document.getElementById('btn-distro').classList.toggle('active', type==='distro');
-  document.getElementById('form-bc').style.display     = type==='bigcartel' ? 'block' : 'none';
-  document.getElementById('form-ph').style.display     = type==='physique'  ? 'block' : 'none';
-  document.getElementById('form-distro').style.display = type==='distro'    ? 'block' : 'none';
-  document.getElementById('row-fdp-enc').style.display = type==='bigcartel' ? 'flex' : 'none';
-  document.getElementById('row-fdp-pay').style.display = type==='bigcartel' ? 'flex' : 'none';
+// ── SWITCH RELEASE ───────────────────────────────────────────────
+function switchRelease(releaseId, btn) {
+  currentRelease = releaseId;
+  localStorage.setItem('bdc_current_release', releaseId);
+  params    = allParams[releaseId]    || JSON.parse(JSON.stringify(RELEASES_DEF[releaseId]));
+  commandes = allCommandes[releaseId] || [];
+  document.querySelectorAll('.release-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const rn = document.getElementById('release-name'); if(rn) rn.textContent = params.nom;
+  filterMode = 'all';
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.filter-btn').classList.add('active');
+  updateStats();
+  renderHistory();
   updatePreview();
 }
 
-// ── APERÇU CALCUL ───────────────────────────────────────────────
+// ── TYPE SWITCH ──────────────────────────────────────────────────
+function setType(type) {
+  currentType = type;
+  ['bc','ph','distro'].forEach(t => {
+    document.getElementById('btn-'+t).classList.toggle('active', type === (t==='bc'?'bigcartel':t==='ph'?'physique':'distro'));
+    document.getElementById('form-'+t).style.display = type === (t==='bc'?'bigcartel':t==='ph'?'physique':'distro') ? 'block' : 'none';
+  });
+  document.getElementById('row-fdp-enc').style.display = type==='bigcartel' ? 'flex' : 'none';
+  document.getElementById('row-fdp-pay').style.display = type==='bigcartel' ? 'flex' : 'none';
+  document.getElementById('row-taux').style.display    = type==='distro'    ? 'flex' : 'none';
+  document.getElementById('prev-total-label').textContent = type==='bigcartel' ? 'Marge nette' : 'Recette';
+  updatePreview();
+}
+
+// ── APERCU ───────────────────────────────────────────────────────
 function updatePreview() {
-  const prix = params.prix;
-
+  const prix = params.prix || 20;
   if (currentType === 'bigcartel') {
-    const pays = document.getElementById('input-pays').value;
+    const pays  = document.getElementById('input-pays').value;
     const tarif = TARIFS.find(t => t.pays === pays);
-
     document.getElementById('prev-vinyl').textContent = fmt(prix);
-
     if (tarif) {
       document.getElementById('prev-fdp-enc').textContent = fmt(tarif.fdpEnc);
       document.getElementById('prev-fdp-pay').textContent = tarif.fdpPay !== null ? fmt(tarif.fdpPay) : '?';
       const marge = tarif.fdpPay !== null ? prix + tarif.fdpEnc - tarif.fdpPay : null;
-      const margeEl = document.getElementById('prev-total');
-      margeEl.textContent = marge !== null ? fmt(marge) : '?';
-      margeEl.className = marge !== null ? (marge >= 0 ? 'cval pos' : 'cval neg') : 'cval';
+      const el = document.getElementById('prev-total');
+      el.textContent = marge !== null ? fmt(marge) : '?';
+      el.className   = marge !== null ? (marge >= 0 ? 'cval pos' : 'cval neg') : 'cval';
     } else {
       document.getElementById('prev-fdp-enc').textContent = '—';
       document.getElementById('prev-fdp-pay').textContent = '—';
       document.getElementById('prev-total').textContent   = '—';
     }
-    document.getElementById('row-fdp-enc').style.display = 'flex';
-    document.getElementById('row-fdp-pay').style.display = 'flex';
   } else if (currentType === 'physique') {
     const qty = parseInt(document.getElementById('input-qty').value) || 1;
     document.getElementById('prev-vinyl').textContent = fmt(prix * qty);
-    const margeEl = document.getElementById('prev-total');
-    margeEl.textContent = fmt(prix * qty);
-    margeEl.className = 'cval pos';
-    document.getElementById('row-fdp-enc').style.display = 'none';
-    document.getElementById('row-fdp-pay').style.display = 'none';
+    document.getElementById('prev-total').textContent = fmt(prix * qty);
+    document.getElementById('prev-total').className   = 'cval pos';
   } else {
-    // distro
-    const qty = parseInt(document.getElementById('input-distro-qty').value) || 1;
-    document.getElementById('prev-vinyl').textContent = fmt(14 * qty);
-    const margeEl = document.getElementById('prev-total');
-    margeEl.textContent = fmt(14 * qty);
-    margeEl.className = 'cval pos';
-    document.getElementById('row-fdp-enc').style.display = 'none';
-    document.getElementById('row-fdp-pay').style.display = 'none';
+    const qty    = parseInt(document.getElementById('input-distro-qty').value) || 1;
+    const pUnit  = parseFloat(document.getElementById('input-distro-prix').value) || 0;
+    const devise = document.getElementById('input-distro-devise').value;
+    const total  = pUnit * qty;
+    const totalEUR = toEUR(total, devise);
+    document.getElementById('prev-vinyl').textContent = fmtDevise(total, devise);
+    if (devise !== 'EUR') {
+      document.getElementById('row-taux').style.display = 'flex';
+      const rate = fxRates[devise];
+      document.getElementById('prev-taux').textContent = rate ? `1 ${devise} = ${(1/rate).toFixed(4)} EUR` : '...';
+    } else {
+      document.getElementById('row-taux').style.display = 'none';
+    }
+    document.getElementById('prev-total').textContent = fmt(totalEUR) + (devise !== 'EUR' ? ` (${fmtDevise(total, devise)})` : '');
+    document.getElementById('prev-total').className   = 'cval pos';
   }
 }
 
-// ── AJOUTER COMMANDE ────────────────────────────────────────────
+// ── AJOUTER COMMANDE ─────────────────────────────────────────────
 function addCommande() {
   const today = new Date().toISOString().split('T')[0];
-
   if (currentType === 'bigcartel') {
     const num    = document.getElementById('input-num').value.trim();
     const pays   = document.getElementById('input-pays').value;
     const statut = document.getElementById('input-statut').value;
+    const note   = document.getElementById('input-note-bc').value.trim();
     if (!num)  { shake('input-num');  return; }
     if (!pays) { shake('input-pays'); return; }
-    commandes.push({ id: Date.now(), type:'bigcartel', num, pays, statut, date: today });
+    commandes.push({ id: Date.now(), type:'bigcartel', num, pays, statut, note, date: today });
     document.getElementById('input-num').value    = '';
     document.getElementById('input-pays').value   = '';
-    document.getElementById('input-statut').value = 'en_attente';
+    document.getElementById('input-note-bc').value= '';
   } else if (currentType === 'physique') {
-    const qty  = parseInt(document.getElementById('input-qty').value) || 1;
-    const lieu = document.getElementById('input-lieu').value.trim();
-    commandes.push({ id: Date.now(), type:'physique', qty, lieu, date: today });
-    document.getElementById('input-qty').value  = 1;
-    document.getElementById('input-lieu').value = '';
+    const qty      = parseInt(document.getElementById('input-qty').value) || 1;
+    const lieu     = document.getElementById('input-lieu').value.trim();
+    const paiement = document.getElementById('input-paiement').value;
+    const note     = document.getElementById('input-note-ph').value.trim();
+    commandes.push({ id: Date.now(), type:'physique', qty, lieu, paiement, note, date: today });
+    document.getElementById('input-qty').value    = 1;
+    document.getElementById('input-lieu').value   = '';
+    document.getElementById('input-note-ph').value= '';
   } else {
-    const qty = parseInt(document.getElementById('input-distro-qty').value) || 1;
-    const nom = document.getElementById('input-distro-nom').value.trim();
-    commandes.push({ id: Date.now(), type:'distro', qty, nom, date: today });
-    document.getElementById('input-distro-qty').value = 1;
-    document.getElementById('input-distro-nom').value = '';
+    const nom    = document.getElementById('input-distro-nom').value.trim();
+    const qty    = parseInt(document.getElementById('input-distro-qty').value) || 1;
+    const prixUnit = parseFloat(document.getElementById('input-distro-prix').value) || 0;
+    const devise = document.getElementById('input-distro-devise').value;
+    const note   = document.getElementById('input-note-distro').value.trim();
+    const tauxEUR = devise === 'EUR' ? 1 : (fxRates[devise] ? 1/fxRates[devise] : 1);
+    commandes.push({ id: Date.now(), type:'distro', nom, qty, prixUnit, devise, tauxEUR, note, date: today });
+    document.getElementById('input-distro-nom').value  = '';
+    document.getElementById('input-distro-qty').value  = 1;
+    document.getElementById('input-distro-prix').value = '';
+    document.getElementById('input-note-distro').value = '';
   }
-
-  save();
+  saveAll();
   updateStats();
   renderHistory();
   updatePreview();
-  showToast('✓ COMMANDE ENREGISTRÉE');
+  showToast('COMMANDE ENREGISTREE');
 }
 
-// ── SUPPRIMER ───────────────────────────────────────────────────
+// ── SUPPRIMER ────────────────────────────────────────────────────
 function deleteCommande(id) {
   commandes = commandes.filter(c => c.id !== id);
-  save();
+  saveAll();
   updateStats();
   renderHistory();
 }
 
 function clearAll() {
-  if (!confirm('Effacer tout l\'historique ?')) return;
+  if (!confirm('Effacer tout l\'historique de cette release ?')) return;
   commandes = [];
-  save();
+  saveAll();
   updateStats();
   renderHistory();
 }
 
-// ── STATS ───────────────────────────────────────────────────────
+// ── TOGGLE STATUT ────────────────────────────────────────────────
+function toggleStatut(id) {
+  const cmd = commandes.find(c => c.id === id);
+  if (!cmd) return;
+  cmd.statut = cmd.statut === 'envoye' ? 'en_attente' : 'envoye';
+  saveAll();
+  renderHistory();
+}
+
+// ── STATS ────────────────────────────────────────────────────────
 function updateStats() {
   const bc     = commandes.filter(c => c.type === 'bigcartel');
   const ph     = commandes.filter(c => c.type === 'physique');
@@ -912,23 +709,21 @@ function updateStats() {
   const nbPH     = ph.reduce((s,c) => s + (c.qty||1), 0);
   const nbDistro = distro.reduce((s,c) => s + (c.qty||1), 0);
   const total    = nbBC + nbPH + nbDistro;
-  const stock    = params.stock - total;
+  const stock    = (params.stock||0) - total;
 
-  // Recettes
   let recettesBC = 0, fdpPayes = 0;
   bc.forEach(c => {
     const t = TARIFS.find(t => t.pays === c.pays);
-    if (t) { recettesBC += params.prix + t.fdpEnc; if (t.fdpPay) fdpPayes += t.fdpPay; }
-    else     recettesBC += params.prix;
+    recettesBC += (params.prix||0) + (t ? t.fdpEnc : 0);
+    if (t && t.fdpPay) fdpPayes += t.fdpPay;
   });
-  const recettesPH     = ph.reduce((s,c) => s + (c.qty||1)*params.prix, 0);
-  const recettesDistro = distro.reduce((s,c) => s + (c.qty||1)*14, 0);
+  const recettesPH     = ph.reduce((s,c) => s + (c.qty||1)*(params.prix||0), 0);
+  const recettesDistro = distro.reduce((s,c) => s + (c.qty||1)*(c.prixUnit||0)*(c.tauxEUR||1), 0);
   const totalRec       = recettesBC + recettesPH + recettesDistro;
-  const balance        = totalRec - fdpPayes - params.invest;
+  const balance        = totalRec - fdpPayes - (params.invest||0);
 
-  document.getElementById('release-name').textContent   = params.nom;
   document.getElementById('stat-stock').textContent     = stock;
-  document.getElementById('stat-stock-sub').textContent = `sur ${params.stock} initial`;
+  document.getElementById('stat-stock-sub').textContent = `sur ${params.stock||0} initial`;
   document.getElementById('stat-ventes').textContent    = total;
   document.getElementById('stat-ventes-sub').textContent= `${nbBC} BC · ${nbPH} physique · ${nbDistro} distro`;
   document.getElementById('stat-recettes').textContent  = fmt(totalRec);
@@ -937,10 +732,10 @@ function updateStats() {
   balEl.textContent = fmt(balance);
   balEl.className   = 'stat-value ' + (balance >= 0 ? 'green' : 'red');
   document.getElementById('stat-balance-sub').textContent =
-    balance >= 0 ? 'bénéfice' : `manque ${fmt(Math.abs(balance))}`;
+    balance >= 0 ? 'benefice' : `manque ${fmt(Math.abs(balance))}`;
 }
 
-// ── HISTORIQUE ──────────────────────────────────────────────────
+// ── HISTORIQUE ───────────────────────────────────────────────────
 function setFilter(mode, btn) {
   filterMode = mode;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -950,131 +745,220 @@ function setFilter(mode, btn) {
 
 function renderHistory() {
   const container = document.getElementById('history-table');
-  const filtered  = filterMode === 'all'
-    ? commandes
-    : commandes.filter(c => c.type === filterMode);
-
+  const filtered  = filterMode === 'all' ? commandes : commandes.filter(c => c.type === filterMode);
   if (filtered.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="big">∅</div>
-        <p>Aucune vente enregistrée</p>
-      </div>`;
+    container.innerHTML = `<div class="empty-state"><div class="big">—</div><p>Aucune vente enregistrée</p></div>`;
     return;
   }
-
-  const rows = [...filtered].reverse().map(c => {
-    if (c.type === 'bigcartel') {
-      const t = TARIFS.find(t => t.pays === c.pays);
-      const marge = t && t.fdpPay !== null ? fmt(params.prix + t.fdpEnc - t.fdpPay) : '?';
+  const rows = [...filtered].reverse().map(cmd => {
+    if (cmd.type === 'bigcartel') {
+      const t     = TARIFS.find(t => t.pays === cmd.pays);
+      const marge = t && t.fdpPay !== null ? fmt((params.prix||0) + t.fdpEnc - t.fdpPay) : '?';
       const fdp   = t && t.fdpPay !== null ? fmt(t.fdpPay) : '?';
-      const statutBadge = c.statut === 'envoye'
-        ? '<span style="color:var(--green);font-size:11px">✓ Envoyé</span>'
-        : '<span style="color:#f39c12;font-size:11px">⏳ En attente</span>';
+      const isEnvoye = cmd.statut === 'envoye';
+      const statBtn  = `<button class="statut-btn ${isEnvoye?'envoye':'attente'}" onclick="toggleStatut(${cmd.id})">${isEnvoye?'Envoyé':'En attente'}</button>`;
       return `<tr>
-        <td>${c.date}</td>
-        <td><span class="badge badge-bc">BIGCARTEL</span></td>
-        <td>#${c.num}</td>
-        <td>${c.pays}</td>
+        <td>${cmd.date}</td>
+        <td><span class="badge badge-bc">BC</span></td>
+        <td>#${cmd.num}</td>
+        <td>${cmd.pays}</td>
         <td>${marge}</td>
         <td style="color:var(--muted)">${fdp}</td>
-        <td>${statutBadge}</td>
-        <td><button class="del-btn" onclick="deleteCommande(${c.id})">✕</button></td>
-      </tr>`;
-    } else if (c.type === 'physique') {
-      const recette = fmt((c.qty||1) * params.prix);
-      const lieu    = c.lieu || '—';
+        <td>${statBtn}</td>
+        <td style="color:var(--muted);font-size:10px">${cmd.note||''}</td>
+        <td>
+          <button class="edit-btn" onclick="openEditModal(${cmd.id})">edit</button>
+          <button class="del-btn"  onclick="deleteCommande(${cmd.id})">✕</button>
+        </td></tr>`;
+    } else if (cmd.type === 'physique') {
+      const recette  = fmt((cmd.qty||1)*(params.prix||0));
+      const payBadge = cmd.paiement==='paypal'
+        ? `<span style="font-size:10px;color:#1a6ea8">PayPal</span>`
+        : `<span style="font-size:10px;color:var(--green)">Cash</span>`;
       return `<tr>
-        <td>${c.date}</td>
+        <td>${cmd.date}</td>
         <td><span class="badge badge-ph">PHYSIQUE</span></td>
-        <td>${c.qty||1} ex.</td>
-        <td colspan="2">${lieu}</td>
+        <td>${cmd.qty||1} ex.</td>
+        <td>${cmd.lieu||'—'}</td>
         <td>${recette}</td>
         <td>—</td>
-        <td><button class="del-btn" onclick="deleteCommande(${c.id})">✕</button></td>
-      </tr>`;
+        <td>${payBadge}</td>
+        <td style="color:var(--muted);font-size:10px">${cmd.note||''}</td>
+        <td>
+          <button class="edit-btn" onclick="openEditModal(${cmd.id})">edit</button>
+          <button class="del-btn"  onclick="deleteCommande(${cmd.id})">✕</button>
+        </td></tr>`;
     } else {
-      const recette = fmt((c.qty||1) * 14);
+      const recEUR   = (cmd.qty||1)*(cmd.prixUnit||0)*(cmd.tauxEUR||1);
+      const recOrig  = cmd.devise && cmd.devise !== 'EUR' ? ` (${fmtDevise((cmd.qty||1)*(cmd.prixUnit||0), cmd.devise)})` : '';
       return `<tr>
-        <td>${c.date}</td>
-        <td><span class="badge" style="background:rgba(0,200,255,0.15);color:#00c8ff">DISTRO</span></td>
-        <td>${c.qty||1} ex.</td>
-        <td colspan="2">${c.nom || '—'}</td>
-        <td>${recette}</td>
+        <td>${cmd.date}</td>
+        <td><span class="badge badge-distro">DISTRO</span></td>
+        <td>${cmd.qty||1} ex.</td>
+        <td>${cmd.nom||'—'}</td>
+        <td>${fmt(recEUR)}${recOrig}</td>
         <td>—</td>
-        <td><button class="del-btn" onclick="deleteCommande(${c.id})">✕</button></td>
-      </tr>`;
+        <td>${cmd.devise||'EUR'}</td>
+        <td style="color:var(--muted);font-size:10px">${cmd.note||''}</td>
+        <td>
+          <button class="edit-btn" onclick="openEditModal(${cmd.id})">edit</button>
+          <button class="del-btn"  onclick="deleteCommande(${cmd.id})">✕</button>
+        </td></tr>`;
     }
   }).join('');
 
-  container.innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Canal</th>
-          <th>Ref</th>
-          <th>Pays / Lieu</th>
-          <th>Marge nette</th>
-          <th>FdP payé</th>
-          <th>Statut</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>`;
+  container.innerHTML = `<table>
+    <thead><tr>
+      <th>Date</th><th>Canal</th><th>Ref</th><th>Pays / Lieu</th>
+      <th>Recette / Marge</th><th>FdP payé</th><th>Statut / Paiement</th><th>Note</th><th></th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
 }
 
-// ── MODAL PARAMÈTRES ────────────────────────────────────────────
+// ── MODAL PARAMS ─────────────────────────────────────────────────
 function openModal() {
-  document.getElementById('p-nom').value    = params.nom;
-  document.getElementById('p-stock').value  = params.stock;
-  document.getElementById('p-prix').value   = params.prix;
-  document.getElementById('p-invest').value = params.invest;
+  document.getElementById('p-nom').value        = params.nom       || '';
+  document.getElementById('p-stock').value      = params.stock     || '';
+  document.getElementById('p-prix').value       = params.prix      || '';
+  document.getElementById('p-prix-groupe').value= params.prixGroupe|| '';
+  document.getElementById('p-invest').value     = params.invest    || '';
   document.getElementById('modal').classList.add('open');
 }
-
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
 
 function saveParams() {
-  params.nom    = document.getElementById('p-nom').value    || params.nom;
-  params.stock  = parseFloat(document.getElementById('p-stock').value)  || params.stock;
-  params.prix   = parseFloat(document.getElementById('p-prix').value)   || params.prix;
-  params.invest = parseFloat(document.getElementById('p-invest').value) || params.invest;
-  saveParamsToFB();
+  params.nom        = document.getElementById('p-nom').value        || params.nom;
+  params.stock      = parseFloat(document.getElementById('p-stock').value)       || params.stock;
+  params.prix       = parseFloat(document.getElementById('p-prix').value)        || params.prix;
+  params.prixGroupe = parseFloat(document.getElementById('p-prix-groupe').value) || params.prixGroupe;
+  params.invest     = parseFloat(document.getElementById('p-invest').value)      || params.invest;
+  allParams[currentRelease] = params;
+  saveAll();
   closeModal();
   updateStats();
   updatePreview();
-  showToast('✓ PARAMÈTRES SAUVEGARDÉS');
+  const rn = document.getElementById('release-name'); if(rn) rn.textContent = params.nom;
+  showToast('PARAMETRES SAUVEGARDES');
 }
 
-// ── UTILS ───────────────────────────────────────────────────────
-function fmt(n) { return n.toFixed(2).replace('.', ',') + ' €'; }
+// ── MODAL EDITION ────────────────────────────────────────────────
+let editId = null;
 
-function save() {
-  localStorage.setItem('bdc_commandes', JSON.stringify(commandes));
+function openEditModal(id) {
+  const cmd = commandes.find(c => c.id === id);
+  if (!cmd) return;
+  editId = id;
+  document.getElementById('edit-form-bc').style.display     = cmd.type==='bigcartel' ? 'block':'none';
+  document.getElementById('edit-form-ph').style.display     = cmd.type==='physique'  ? 'block':'none';
+  document.getElementById('edit-form-distro').style.display = cmd.type==='distro'    ? 'block':'none';
+
+  if (cmd.type === 'bigcartel') {
+    document.getElementById('edit-num').value    = cmd.num    || '';
+    document.getElementById('edit-date').value   = cmd.date   || '';
+    document.getElementById('edit-statut').value = cmd.statut || 'en_attente';
+    document.getElementById('edit-note-bc').value= cmd.note   || '';
+    const sel = document.getElementById('edit-pays');
+    if (sel.options.length === 0) {
+      TARIFS.forEach(t => { const o = document.createElement('option'); o.value=t.pays; o.textContent=t.pays; sel.appendChild(o); });
+    }
+    sel.value = cmd.pays || '';
+  } else if (cmd.type === 'physique') {
+    document.getElementById('edit-qty').value       = cmd.qty      || 1;
+    document.getElementById('edit-lieu').value      = cmd.lieu     || '';
+    document.getElementById('edit-paiement').value  = cmd.paiement || 'cash';
+    document.getElementById('edit-date-ph').value   = cmd.date     || '';
+    document.getElementById('edit-note-ph').value   = cmd.note     || '';
+  } else {
+    document.getElementById('edit-distro-nom').value   = cmd.nom      || '';
+    document.getElementById('edit-distro-qty').value   = cmd.qty      || 1;
+    document.getElementById('edit-distro-prix').value  = cmd.prixUnit || '';
+    document.getElementById('edit-distro-devise').value= cmd.devise   || 'EUR';
+    document.getElementById('edit-date-distro').value  = cmd.date     || '';
+    document.getElementById('edit-note-distro').value  = cmd.note     || '';
+  }
+  document.getElementById('modal-edit').classList.add('open');
+}
+
+function closeEditModal() { document.getElementById('modal-edit').classList.remove('open'); editId = null; }
+
+function saveEdit() {
+  const cmd = commandes.find(c => c.id === editId);
+  if (!cmd) return;
+  if (cmd.type === 'bigcartel') {
+    cmd.num    = document.getElementById('edit-num').value.trim();
+    cmd.pays   = document.getElementById('edit-pays').value;
+    cmd.date   = document.getElementById('edit-date').value;
+    cmd.statut = document.getElementById('edit-statut').value;
+    cmd.note   = document.getElementById('edit-note-bc').value.trim();
+  } else if (cmd.type === 'physique') {
+    cmd.qty      = parseInt(document.getElementById('edit-qty').value) || 1;
+    cmd.lieu     = document.getElementById('edit-lieu').value.trim();
+    cmd.paiement = document.getElementById('edit-paiement').value;
+    cmd.date     = document.getElementById('edit-date-ph').value;
+    cmd.note     = document.getElementById('edit-note-ph').value.trim();
+  } else {
+    cmd.nom      = document.getElementById('edit-distro-nom').value.trim();
+    cmd.qty      = parseInt(document.getElementById('edit-distro-qty').value) || 1;
+    cmd.prixUnit = parseFloat(document.getElementById('edit-distro-prix').value) || 0;
+    cmd.devise   = document.getElementById('edit-distro-devise').value;
+    cmd.tauxEUR  = cmd.devise === 'EUR' ? 1 : (fxRates[cmd.devise] ? 1/fxRates[cmd.devise] : cmd.tauxEUR||1);
+    cmd.date     = document.getElementById('edit-date-distro').value;
+    cmd.note     = document.getElementById('edit-note-distro').value.trim();
+  }
+  saveAll();
+  closeEditModal();
+  updateStats();
+  renderHistory();
+  showToast('COMMANDE MISE A JOUR');
+}
+
+// ── SAVE ─────────────────────────────────────────────────────────
+function saveAll() {
+  allCommandes[currentRelease] = commandes;
+  allParams[currentRelease]    = params;
+  localStorage.setItem('bdc_all_commandes', JSON.stringify(allCommandes));
+  localStorage.setItem('bdc_all_params',    JSON.stringify(allParams));
   if (window._fbSaveCommandes) {
     setSyncDot('syncing');
-    window._fbSaveCommandes(commandes).then(() => setSyncDot('synced')).catch(() => setSyncDot('error'));
+    window._fbSaveCommandes(allCommandes).then(() => setSyncDot('synced')).catch(() => setSyncDot('error'));
+    window._fbSaveParams(allParams);
   }
 }
+function save() { saveAll(); }
 
-function saveParamsToFB() {
-  localStorage.setItem('bdc_params', JSON.stringify(params));
-  if (window._fbSaveParams) {
-    setSyncDot('syncing');
-    window._fbSaveParams(params).then(() => setSyncDot('synced')).catch(() => setSyncDot('error'));
+// ── FIREBASE CALLBACKS ───────────────────────────────────────────
+window._fbOnCommandes = (data) => {
+  if (JSON.stringify(data) !== JSON.stringify(allCommandes)) {
+    allCommandes = data;
+    commandes = allCommandes[currentRelease] || [];
+    localStorage.setItem('bdc_all_commandes', JSON.stringify(allCommandes));
+    updateStats(); renderHistory(); setSyncDot('synced');
   }
-}
+};
+window._fbOnParams = (data) => {
+  if (JSON.stringify(data) !== JSON.stringify(allParams)) {
+    allParams = data;
+    params = allParams[currentRelease];
+    localStorage.setItem('bdc_all_params', JSON.stringify(allParams));
+    updateStats(); updatePreview();
+    const rn = document.getElementById('release-name'); if(rn) rn.textContent = params.nom;
+    setSyncDot('synced');
+  }
+};
+window.addEventListener('firebase-ready', () => setSyncDot('synced'));
 
+// ── UTILS ────────────────────────────────────────────────────────
+function setSyncDot(state) {
+  const d = document.getElementById('sync-dot');
+  if (d) d.className = 'sync-dot ' + state;
+}
+function fmt(n) { return (Math.round(n*100)/100).toFixed(2).replace('.', ',') + ' €'; }
 function shake(id) {
   const el = document.getElementById(id);
   el.style.borderColor = 'var(--red)';
-  setTimeout(() => el.style.borderColor = '', 1000);
+  setTimeout(() => el.style.borderColor = '', 1200);
 }
-
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -1082,37 +966,7 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ── FIREBASE CALLBACKS ──────────────────────────────────────────
-window._fbOnCommandes = (data) => {
-  // Only update if data is different from local to avoid loop
-  if (JSON.stringify(data) !== JSON.stringify(commandes)) {
-    commandes = data;
-    localStorage.setItem('bdc_commandes', JSON.stringify(commandes));
-    updateStats();
-    renderHistory();
-    setSyncDot('synced');
-  }
-};
-
-window._fbOnParams = (data) => {
-  if (JSON.stringify(data) !== JSON.stringify(params)) {
-    params = data;
-    localStorage.setItem('bdc_params', JSON.stringify(params));
-    updateStats();
-    updatePreview();
-    document.getElementById('release-name').textContent = params.nom;
-    setSyncDot('synced');
-  }
-};
-
-// ── GO ──────────────────────────────────────────────────────────
-// Wait for Firebase, then init
-window.addEventListener('firebase-ready', () => {
-  firebaseReady = true;
-  setSyncDot('synced');
-});
-
-// Init immediately with local data, Firebase will sync on top
+// ── GO ───────────────────────────────────────────────────────────
 init();
 </script>
 </body>
