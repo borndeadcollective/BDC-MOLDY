@@ -175,6 +175,14 @@ header {
 .btn-cancel:hover { border-color: var(--red); color: var(--red); }
 .modal-section { font-family: var(--font-display); font-size: 13px; letter-spacing: 2px; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin: 16px 0 10px; }
 
+/* TABLE TARIFS */
+.tarifs-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 11px; }
+.tarifs-table th { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+.tarifs-table td { padding: 5px 6px; border-bottom: 1px solid #f0f0f0; }
+.tarifs-table input { width: 70px; background: #f8f8f8; border: 1px solid var(--border); color: var(--text); font-family: var(--font-mono); font-size: 11px; padding: 4px 6px; text-align: right; }
+.tarifs-table input:focus { outline: none; border-color: #1a1a1a; }
+.tarifs-table .pays-name { font-weight: 600; color: var(--text); }
+
 /* DEVISE SELECTOR */
 .devise-row { display: flex; gap: 8px; }
 .devise-row input { flex: 1; }
@@ -249,6 +257,7 @@ header {
     <div class="type-selector">
       <div class="type-btn active" id="btn-bc"     onclick="setType('bigcartel')">BIGCARTEL</div>
       <div class="type-btn"        id="btn-ph"     onclick="setType('physique')">PHYSIQUE</div>
+      <div class="type-btn"        id="btn-groupe" onclick="setType('groupe')">GROUPE</div>
       <div class="type-btn full"   id="btn-distro" onclick="setType('distro')">DISTRO / SHOP</div>
     </div>
 
@@ -298,6 +307,26 @@ header {
       </div>
     </div>
 
+    <!-- GROUPE -->
+    <div id="form-groupe" style="display:none">
+      <div class="form-group">
+        <label>Nom du groupe</label>
+        <input type="text" id="input-groupe-nom" placeholder="ex: Corruption Pact" />
+      </div>
+      <div class="form-group">
+        <label>Quantité</label>
+        <input type="number" id="input-groupe-qty" min="1" value="1" />
+      </div>
+      <div class="form-group">
+        <label>Prix unitaire (€)</label>
+        <input type="number" id="input-groupe-prix" step="0.01" placeholder="ex: 16" />
+      </div>
+      <div class="form-group">
+        <label>Note (optionnel)</label>
+        <input type="text" id="input-note-groupe" placeholder="" />
+      </div>
+    </div>
+
     <!-- DISTRO -->
     <div id="form-distro" style="display:none">
       <div class="form-group">
@@ -323,6 +352,26 @@ header {
       <div class="form-group">
         <label>Note (optionnel)</label>
         <input type="text" id="input-note-distro" placeholder="ex: payé / en attente..." />
+      </div>
+    </div>
+
+    <!-- GROUPE -->
+    <div id="form-groupe" style="display:none">
+      <div class="form-group">
+        <label>Nom du groupe</label>
+        <input type="text" id="input-groupe-nom" placeholder="ex: Corruption Pact" />
+      </div>
+      <div class="form-group">
+        <label>Quantité</label>
+        <input type="number" id="input-groupe-qty" min="1" value="1" />
+      </div>
+      <div class="form-group">
+        <label>Prix unitaire (€)</label>
+        <input type="number" id="input-groupe-prix" step="0.01" placeholder="ex: 16" />
+      </div>
+      <div class="form-group">
+        <label>Note (optionnel)</label>
+        <input type="text" id="input-note-groupe" placeholder="" />
       </div>
     </div>
 
@@ -364,6 +413,8 @@ header {
       <button class="filter-btn active" onclick="setFilter('all', this)">Tout</button>
       <button class="filter-btn" onclick="setFilter('bigcartel', this)">Bigcartel</button>
       <button class="filter-btn" onclick="setFilter('physique', this)">Physique</button>
+      <button class="filter-btn" onclick="setFilter('groupe', this)">Groupe</button>
+      <button class="filter-btn" onclick="setFilter('groupe', this)">Groupe</button>
       <button class="filter-btn" onclick="setFilter('distro', this)">Distro</button>
     </div>
     <div class="history-table" id="history-table"></div>
@@ -373,15 +424,25 @@ header {
 <!-- MODAL PARAMETRES -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
-    <h2>PARAMETRES RELEASE</h2>
-    <div class="modal-section">Infos</div>
+    <h2>PARAMETRES</h2>
+
+    <div class="modal-section">Release</div>
     <div class="form-group"><label>Nom release</label><input type="text" id="p-nom" /></div>
     <div class="form-group"><label>Stock initial</label><input type="number" id="p-stock" /></div>
+
     <div class="modal-section">Prix de vente</div>
     <div class="form-group"><label>Prix Bigcartel / Physique (€)</label><input type="number" id="p-prix" step="0.01" /></div>
     <div class="form-group"><label>Prix groupe (€)</label><input type="number" id="p-prix-groupe" step="0.01" /></div>
+
     <div class="modal-section">Finances</div>
     <div class="form-group"><label>Investissement total (€)</label><input type="number" id="p-invest" step="0.01" /></div>
+
+    <div class="modal-section">Frais de port par pays</div>
+    <table class="tarifs-table">
+      <thead><tr><th>Pays</th><th>Encaissé (€)</th><th>Mondial Relay (€)</th></tr></thead>
+      <tbody id="tarifs-tbody"></tbody>
+    </table>
+
     <div class="modal-btns">
       <button class="btn-save" onclick="saveParams()">SAUVEGARDER</button>
       <button class="btn-cancel" onclick="closeModal()">ANNULER</button>
@@ -432,6 +493,13 @@ header {
       <div class="form-group"><label>Date</label><input type="date" id="edit-date-distro" /></div>
       <div class="form-group"><label>Note</label><input type="text" id="edit-note-distro" /></div>
     </div>
+    <div id="edit-form-groupe" style="display:none">
+      <div class="form-group"><label>Nom groupe</label><input type="text" id="edit-groupe-nom" /></div>
+      <div class="form-group"><label>Quantité</label><input type="number" id="edit-groupe-qty" min="1" /></div>
+      <div class="form-group"><label>Prix unitaire (€)</label><input type="number" id="edit-groupe-prix" step="0.01" /></div>
+      <div class="form-group"><label>Date</label><input type="date" id="edit-date-groupe" /></div>
+      <div class="form-group"><label>Note</label><input type="text" id="edit-note-groupe" /></div>
+    </div>
     <div class="modal-btns">
       <button class="btn-save" onclick="saveEdit()">SAUVEGARDER</button>
       <button class="btn-cancel" onclick="closeEditModal()">ANNULER</button>
@@ -443,19 +511,22 @@ header {
 
 <script>
 // ── TARIFS FDP ──────────────────────────────────────────────────
-const TARIFS = [
-  { pays: "France",         fdpEnc: 6.00,  fdpPay: 4.10  },
-  { pays: "Belgique",       fdpEnc: 8.00,  fdpPay: 4.60  },
-  { pays: "Espagne",        fdpEnc: 8.50,  fdpPay: 6.60  },
-  { pays: "Allemagne",      fdpEnc: 14.00, fdpPay: 12.50 },
-  { pays: "Italie",         fdpEnc: 8.50,  fdpPay: 6.60  },
-  { pays: "Pays-Bas",       fdpEnc: 7.50,  fdpPay: 4.60  },
-  { pays: "Autriche",       fdpEnc: 16.00, fdpPay: 16.00 },
-  { pays: "Luxembourg",     fdpEnc: 8.00,  fdpPay: 4.60  },
-  { pays: "Portugal",       fdpEnc: 8.00,  fdpPay: 6.60  },
-  { pays: "Pologne",        fdpEnc: 9.00,  fdpPay: 7.20  },
-  { pays: "United Kingdom", fdpEnc: 20.00, fdpPay: null   },
+// TARIFS — modifiables via Paramètres > Frais de port
+// fdpEnc = ce que tu encaisses du client / fdpPay = ce que tu paies Mondial Relay
+const TARIFS_DEFAULT = [
+  { pays: "France",         fdpEnc: 5.50,  fdpPay: 5.00  },
+  { pays: "Belgique",       fdpEnc: 7.00,  fdpPay: 6.00  },
+  { pays: "Espagne",        fdpEnc: 8.00,  fdpPay: 6.00  },
+  { pays: "Allemagne",      fdpEnc: 14.00, fdpPay: 10.00 },
+  { pays: "Italie",         fdpEnc: 8.00,  fdpPay: 6.50  },
+  { pays: "Pays-Bas",       fdpEnc: 6.00,  fdpPay: 5.00  },
+  { pays: "Autriche",       fdpEnc: 16.00, fdpPay: null  },
+  { pays: "Luxembourg",     fdpEnc: 6.00,  fdpPay: 5.00  },
+  { pays: "Portugal",       fdpEnc: 7.50,  fdpPay: 6.00  },
+  { pays: "Pologne",        fdpEnc: 8.00,  fdpPay: 7.00  },
+  { pays: "United Kingdom", fdpEnc: 20.00, fdpPay: null  },
 ];
+let TARIFS = JSON.parse(localStorage.getItem('bdc_tarifs') || 'null') || TARIFS_DEFAULT;
 
 // ── RELEASES CONFIG ──────────────────────────────────────────────
 const RELEASES_DEF = {
@@ -544,6 +615,8 @@ async function init() {
   document.getElementById('input-distro-qty').addEventListener('input', updatePreview);
   document.getElementById('input-distro-prix').addEventListener('input', updatePreview);
   document.getElementById('input-distro-devise').addEventListener('change', updatePreview);
+  document.getElementById('input-groupe-qty').addEventListener('input', updatePreview);
+  document.getElementById('input-groupe-prix').addEventListener('input', updatePreview);
 
   // Activer le bon onglet release
   document.querySelectorAll('.release-tab').forEach(btn => {
@@ -577,9 +650,10 @@ function switchRelease(releaseId, btn) {
 // ── TYPE SWITCH ──────────────────────────────────────────────────
 function setType(type) {
   currentType = type;
-  ['bc','ph','distro'].forEach(t => {
-    document.getElementById('btn-'+t).classList.toggle('active', type === (t==='bc'?'bigcartel':t==='ph'?'physique':'distro'));
-    document.getElementById('form-'+t).style.display = type === (t==='bc'?'bigcartel':t==='ph'?'physique':'distro') ? 'block' : 'none';
+  const map = { bc:'bigcartel', ph:'physique', distro:'distro', groupe:'groupe' };
+  Object.entries(map).forEach(([key, val]) => {
+    document.getElementById('btn-'+key).classList.toggle('active', type === val);
+    document.getElementById('form-'+key).style.display = type === val ? 'block' : 'none';
   });
   document.getElementById('row-fdp-enc').style.display = type==='bigcartel' ? 'flex' : 'none';
   document.getElementById('row-fdp-pay').style.display = type==='bigcartel' ? 'flex' : 'none';
@@ -611,6 +685,18 @@ function updatePreview() {
     const qty = parseInt(document.getElementById('input-qty').value) || 1;
     document.getElementById('prev-vinyl').textContent = fmt(prix * qty);
     document.getElementById('prev-total').textContent = fmt(prix * qty);
+    document.getElementById('prev-total').className   = 'cval pos';
+  } else if (currentType === 'groupe') {
+    const qty   = parseInt(document.getElementById('input-groupe-qty').value) || 1;
+    const pUnit = parseFloat(document.getElementById('input-groupe-prix').value) || 0;
+    document.getElementById('prev-vinyl').textContent = fmt(pUnit * qty);
+    document.getElementById('prev-total').textContent = fmt(pUnit * qty);
+    document.getElementById('prev-total').className   = 'cval pos';
+  } else if (currentType === 'groupe') {
+    const qty   = parseInt(document.getElementById('input-groupe-qty').value) || 1;
+    const pUnit = parseFloat(document.getElementById('input-groupe-prix').value) || 0;
+    document.getElementById('prev-vinyl').textContent = fmt(pUnit * qty);
+    document.getElementById('prev-total').textContent = fmt(pUnit * qty);
     document.getElementById('prev-total').className   = 'cval pos';
   } else {
     const qty    = parseInt(document.getElementById('input-distro-qty').value) || 1;
@@ -654,6 +740,26 @@ function addCommande() {
     document.getElementById('input-qty').value    = 1;
     document.getElementById('input-lieu').value   = '';
     document.getElementById('input-note-ph').value= '';
+  } else if (currentType === 'groupe') {
+    const nom    = document.getElementById('input-groupe-nom').value.trim();
+    const qty    = parseInt(document.getElementById('input-groupe-qty').value) || 1;
+    const prixUnit = parseFloat(document.getElementById('input-groupe-prix').value) || 0;
+    const note   = document.getElementById('input-note-groupe').value.trim();
+    commandes.push({ id: Date.now(), type:'groupe', nom, qty, prixUnit, note, date: today });
+    document.getElementById('input-groupe-nom').value  = '';
+    document.getElementById('input-groupe-qty').value  = 1;
+    document.getElementById('input-groupe-prix').value = '';
+    document.getElementById('input-note-groupe').value = '';
+  } else if (currentType === 'groupe') {
+    const nom    = document.getElementById('input-groupe-nom').value.trim();
+    const qty    = parseInt(document.getElementById('input-groupe-qty').value) || 1;
+    const prix   = parseFloat(document.getElementById('input-groupe-prix').value) || 0;
+    const note   = document.getElementById('input-note-groupe').value.trim();
+    commandes.push({ id: Date.now(), type:'groupe', nom, qty, prixUnit: prix, note, date: today });
+    document.getElementById('input-groupe-nom').value  = '';
+    document.getElementById('input-groupe-qty').value  = 1;
+    document.getElementById('input-groupe-prix').value = '';
+    document.getElementById('input-note-groupe').value = '';
   } else {
     const nom    = document.getElementById('input-distro-nom').value.trim();
     const qty    = parseInt(document.getElementById('input-distro-qty').value) || 1;
@@ -705,10 +811,12 @@ function updateStats() {
   const ph     = commandes.filter(c => c.type === 'physique');
   const distro = commandes.filter(c => c.type === 'distro');
 
+  const groupe   = commandes.filter(c => c.type === 'groupe');
   const nbBC     = bc.length;
   const nbPH     = ph.reduce((s,c) => s + (c.qty||1), 0);
   const nbDistro = distro.reduce((s,c) => s + (c.qty||1), 0);
-  const total    = nbBC + nbPH + nbDistro;
+  const nbGroupe = groupe.reduce((s,c) => s + (c.qty||1), 0);
+  const total    = nbBC + nbPH + nbDistro + nbGroupe;
   const stock    = (params.stock||0) - total;
 
   let recettesBC = 0, fdpPayes = 0;
@@ -719,13 +827,14 @@ function updateStats() {
   });
   const recettesPH     = ph.reduce((s,c) => s + (c.qty||1)*(params.prix||0), 0);
   const recettesDistro = distro.reduce((s,c) => s + (c.qty||1)*(c.prixUnit||0)*(c.tauxEUR||1), 0);
-  const totalRec       = recettesBC + recettesPH + recettesDistro;
+  const recettesGroupe = groupe.reduce((s,c) => s + (c.qty||1)*(c.prixUnit||0), 0);
+  const totalRec       = recettesBC + recettesPH + recettesDistro + recettesGroupe;
   const balance        = totalRec - fdpPayes - (params.invest||0);
 
   document.getElementById('stat-stock').textContent     = stock;
   document.getElementById('stat-stock-sub').textContent = `sur ${params.stock||0} initial`;
   document.getElementById('stat-ventes').textContent    = total;
-  document.getElementById('stat-ventes-sub').textContent= `${nbBC} BC · ${nbPH} physique · ${nbDistro} distro`;
+  document.getElementById('stat-ventes-sub').textContent= `${nbBC} BC · ${nbPH} physique · ${nbGroupe} groupe · ${nbDistro} distro`;
   document.getElementById('stat-recettes').textContent  = fmt(totalRec);
 
   const balEl = document.getElementById('stat-balance');
@@ -788,6 +897,36 @@ function renderHistory() {
           <button class="edit-btn" onclick="openEditModal(${cmd.id})">edit</button>
           <button class="del-btn"  onclick="deleteCommande(${cmd.id})">✕</button>
         </td></tr>`;
+    } else if (cmd.type === 'groupe') {
+      const recette = fmt((cmd.qty||1)*(cmd.prixUnit||0));
+      return `<tr>
+        <td>${cmd.date}</td>
+        <td><span class="badge" style="background:#f0e6ff;color:#6a1ab8;border:1px solid #d4b0f0">GROUPE</span></td>
+        <td>${cmd.qty||1} ex.</td>
+        <td>${cmd.nom||'—'}</td>
+        <td>${recette} (${fmt(cmd.prixUnit||0)}/ex.)</td>
+        <td>—</td>
+        <td>—</td>
+        <td style="color:var(--muted);font-size:10px">${cmd.note||''}</td>
+        <td>
+          <button class="edit-btn" onclick="openEditModal(${cmd.id})">edit</button>
+          <button class="del-btn"  onclick="deleteCommande(${cmd.id})">✕</button>
+        </td></tr>`;
+    } else if (cmd.type === 'groupe') {
+      const recette = fmt((cmd.qty||1)*(cmd.prixUnit||0));
+      return `<tr>
+        <td>${cmd.date}</td>
+        <td><span class="badge" style="background:#f0e6ff;color:#6a1a9a;border:1px solid #d4a8f0">GROUPE</span></td>
+        <td>${cmd.qty||1} ex.</td>
+        <td>${cmd.nom||'—'}</td>
+        <td>${recette}</td>
+        <td>—</td>
+        <td>${fmt(cmd.prixUnit||0)}/ex.</td>
+        <td style="color:var(--muted);font-size:10px">${cmd.note||''}</td>
+        <td>
+          <button class="edit-btn" onclick="openEditModal(${cmd.id})">edit</button>
+          <button class="del-btn"  onclick="deleteCommande(${cmd.id})">✕</button>
+        </td></tr>`;
     } else {
       const recEUR   = (cmd.qty||1)*(cmd.prixUnit||0)*(cmd.tauxEUR||1);
       const recOrig  = cmd.devise && cmd.devise !== 'EUR' ? ` (${fmtDevise((cmd.qty||1)*(cmd.prixUnit||0), cmd.devise)})` : '';
@@ -823,6 +962,16 @@ function openModal() {
   document.getElementById('p-prix').value       = params.prix      || '';
   document.getElementById('p-prix-groupe').value= params.prixGroupe|| '';
   document.getElementById('p-invest').value     = params.invest    || '';
+
+  // Remplir tableau tarifs
+  const tbody = document.getElementById('tarifs-tbody');
+  tbody.innerHTML = TARIFS.map((t, i) => `
+    <tr>
+      <td class="pays-name">${t.pays}</td>
+      <td><input type="number" step="0.01" value="${t.fdpEnc}" id="t-enc-${i}" /></td>
+      <td><input type="number" step="0.01" value="${t.fdpPay !== null ? t.fdpPay : ''}" placeholder="?" id="t-pay-${i}" /></td>
+    </tr>`).join('');
+
   document.getElementById('modal').classList.add('open');
 }
 function closeModal() { document.getElementById('modal').classList.remove('open'); }
@@ -834,10 +983,28 @@ function saveParams() {
   params.prixGroupe = parseFloat(document.getElementById('p-prix-groupe').value) || params.prixGroupe;
   params.invest     = parseFloat(document.getElementById('p-invest').value)      || params.invest;
   allParams[currentRelease] = params;
+
+  // Sauver tarifs modifiés
+  TARIFS = TARIFS.map((t, i) => ({
+    ...t,
+    fdpEnc: parseFloat(document.getElementById('t-enc-'+i).value) || t.fdpEnc,
+    fdpPay: document.getElementById('t-pay-'+i).value !== '' ? parseFloat(document.getElementById('t-pay-'+i).value) : null,
+  }));
+  localStorage.setItem('bdc_tarifs', JSON.stringify(TARIFS));
+  if (window._fbSaveParams) window._fbSaveParams({ ...allParams, _tarifs: TARIFS });
+
   saveAll();
   closeModal();
   updateStats();
   updatePreview();
+  // Refresh dropdowns pays
+  const sel = document.getElementById('input-pays');
+  sel.innerHTML = '<option value="">— Choisir —</option>';
+  TARIFS.forEach(t => { const o = document.createElement('option'); o.value=t.pays; o.textContent=t.pays; sel.appendChild(o); });
+  const selE = document.getElementById('edit-pays');
+  selE.innerHTML = '';
+  TARIFS.forEach(t => { const o = document.createElement('option'); o.value=t.pays; o.textContent=t.pays; selE.appendChild(o); });
+
   const rn = document.getElementById('release-name'); if(rn) rn.textContent = params.nom;
   showToast('PARAMETRES SAUVEGARDES');
 }
@@ -851,7 +1018,8 @@ function openEditModal(id) {
   editId = id;
   document.getElementById('edit-form-bc').style.display     = cmd.type==='bigcartel' ? 'block':'none';
   document.getElementById('edit-form-ph').style.display     = cmd.type==='physique'  ? 'block':'none';
-  document.getElementById('edit-form-distro').style.display = cmd.type==='distro'    ? 'block':'none';
+  document.getElementById('edit-form-distro').style.display = (cmd.type==='distro' || cmd.type==='groupe') ? 'block':'none';
+  document.getElementById('edit-form-groupe').style.display = cmd.type==='groupe'    ? 'block':'none';
 
   if (cmd.type === 'bigcartel') {
     document.getElementById('edit-num').value    = cmd.num    || '';
@@ -869,6 +1037,19 @@ function openEditModal(id) {
     document.getElementById('edit-paiement').value  = cmd.paiement || 'cash';
     document.getElementById('edit-date-ph').value   = cmd.date     || '';
     document.getElementById('edit-note-ph').value   = cmd.note     || '';
+  } else if (cmd.type === 'groupe') {
+    document.getElementById('edit-groupe-nom').value  = cmd.nom      || '';
+    document.getElementById('edit-groupe-qty').value  = cmd.qty      || 1;
+    document.getElementById('edit-groupe-prix').value = cmd.prixUnit || '';
+    document.getElementById('edit-date-groupe').value = cmd.date     || '';
+    document.getElementById('edit-note-groupe').value = cmd.note     || '';
+  } else if (cmd.type === 'groupe') {
+    // use distro form fields for groupe too
+    document.getElementById('edit-distro-nom').value   = cmd.nom      || '';
+    document.getElementById('edit-distro-qty').value   = cmd.qty      || 1;
+    document.getElementById('edit-distro-prix').value  = cmd.prixUnit || '';
+    document.getElementById('edit-date-distro').value  = cmd.date     || '';
+    document.getElementById('edit-note-distro').value  = cmd.note     || '';
   } else {
     document.getElementById('edit-distro-nom').value   = cmd.nom      || '';
     document.getElementById('edit-distro-qty').value   = cmd.qty      || 1;
@@ -897,6 +1078,18 @@ function saveEdit() {
     cmd.paiement = document.getElementById('edit-paiement').value;
     cmd.date     = document.getElementById('edit-date-ph').value;
     cmd.note     = document.getElementById('edit-note-ph').value.trim();
+  } else if (cmd.type === 'groupe') {
+    cmd.nom      = document.getElementById('edit-groupe-nom').value.trim();
+    cmd.qty      = parseInt(document.getElementById('edit-groupe-qty').value) || 1;
+    cmd.prixUnit = parseFloat(document.getElementById('edit-groupe-prix').value) || 0;
+    cmd.date     = document.getElementById('edit-date-groupe').value;
+    cmd.note     = document.getElementById('edit-note-groupe').value.trim();
+  } else if (cmd.type === 'groupe') {
+    cmd.nom      = document.getElementById('edit-distro-nom').value.trim();
+    cmd.qty      = parseInt(document.getElementById('edit-distro-qty').value) || 1;
+    cmd.prixUnit = parseFloat(document.getElementById('edit-distro-prix').value) || 0;
+    cmd.date     = document.getElementById('edit-date-distro').value;
+    cmd.note     = document.getElementById('edit-note-distro').value.trim();
   } else {
     cmd.nom      = document.getElementById('edit-distro-nom').value.trim();
     cmd.qty      = parseInt(document.getElementById('edit-distro-qty').value) || 1;
