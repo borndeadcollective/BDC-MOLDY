@@ -497,7 +497,7 @@ header {
 
     <div class="modal-section">Frais de port par pays</div>
     <table class="tarifs-table">
-      <thead><tr><th>Pays</th><th>Encaissé (€)</th><th>Mondial Relay (€)</th></tr></thead>
+      <thead><tr><th>Pays</th><th>Encaissé</th><th>1 LP (500g)</th><th>2 LP (1kg)</th></tr></thead>
       <tbody id="tarifs-tbody"></tbody>
     </table>
 
@@ -573,24 +573,33 @@ header {
 <script>
 // ── TARIFS FDP ──────────────────────────────────────────────────
 // TARIFS — modifiables via Paramètres > Frais de port
-// fdpEnc = ce que tu encaisses du client / fdpPay = ce que tu paies Mondial Relay
+// fdpEnc    = ce que tu encaisses du client (Bigcartel)
+// fdpPay500g = ce que tu paies pour 1 LP (500g)
+// fdpPay1kg  = ce que tu paies pour 2 LP (1kg)
 const TARIFS_DEFAULT = [
-  { pays: "France",         fdpEnc: 5.50,  fdpPay: 5.00  },
-  { pays: "Belgique",       fdpEnc: 7.00,  fdpPay: 6.00  },
-  { pays: "Espagne",        fdpEnc: 8.00,  fdpPay: 6.00  },
-  { pays: "Allemagne",      fdpEnc: 14.00, fdpPay: 10.00 },
-  { pays: "Italie",         fdpEnc: 8.00,  fdpPay: 6.50  },
-  { pays: "Pays-Bas",       fdpEnc: 6.00,  fdpPay: 5.00  },
-  { pays: "Autriche",       fdpEnc: 16.00, fdpPay: null  },
-  { pays: "Luxembourg",     fdpEnc: 6.00,  fdpPay: 5.00  },
-  { pays: "Portugal",       fdpEnc: 7.50,  fdpPay: 6.00  },
-  { pays: "Pologne",        fdpEnc: 8.00,  fdpPay: 7.00  },
-  { pays: "United Kingdom", fdpEnc: 20.00, fdpPay: null  },
-  { pays: "Suède",          fdpEnc: 17.00, fdpPay: 14.99 },
-  { pays: "Norvège",        fdpEnc: 25.00, fdpPay: 23.79 },
-  { pays: "Finlande",       fdpEnc: 17.00, fdpPay: 14.99 },
+  { pays: "France",         fdpEnc: 5.50,  fdpPay500g: 5.00,  fdpPay1kg: 5.99,  transporteur: "Mondial Relay" },
+  { pays: "Belgique",       fdpEnc: 7.00,  fdpPay500g: 6.00,  fdpPay1kg: 6.60,  transporteur: "Mondial Relay" },
+  { pays: "Espagne",        fdpEnc: 8.00,  fdpPay500g: 6.00,  fdpPay1kg: 9.50,  transporteur: "Mondial Relay" },
+  { pays: "Allemagne",      fdpEnc: 14.00, fdpPay500g: 10.00, fdpPay1kg: 13.80, transporteur: "Mondial Relay" },
+  { pays: "Italie",         fdpEnc: 8.00,  fdpPay500g: 6.50,  fdpPay1kg: 9.50,  transporteur: "Mondial Relay" },
+  { pays: "Pays-Bas",       fdpEnc: 6.00,  fdpPay500g: 5.00,  fdpPay1kg: 6.60,  transporteur: "Mondial Relay" },
+  { pays: "Luxembourg",     fdpEnc: 6.00,  fdpPay500g: 5.00,  fdpPay1kg: 6.60,  transporteur: "Mondial Relay" },
+  { pays: "Portugal",       fdpEnc: 7.50,  fdpPay500g: 6.00,  fdpPay1kg: 9.50,  transporteur: "Mondial Relay" },
+  { pays: "Pologne",        fdpEnc: 8.00,  fdpPay500g: 7.00,  fdpPay1kg: 10.40, transporteur: "Mondial Relay" },
+  { pays: "Autriche",       fdpEnc: 16.00, fdpPay500g: 14.99, fdpPay1kg: 19.39, transporteur: "La Poste" },
+  { pays: "Suède",          fdpEnc: 17.00, fdpPay500g: 14.99, fdpPay1kg: 19.39, transporteur: "La Poste" },
+  { pays: "Finlande",       fdpEnc: 17.00, fdpPay500g: 14.99, fdpPay1kg: 19.39, transporteur: "La Poste" },
+  { pays: "Danemark",       fdpEnc: 17.00, fdpPay500g: 14.99, fdpPay1kg: 19.39, transporteur: "La Poste" },
+  { pays: "United Kingdom", fdpEnc: 20.00, fdpPay500g: 18.99, fdpPay1kg: 23.39, transporteur: "La Poste" },
+  { pays: "Norvège",        fdpEnc: 25.00, fdpPay500g: 23.79, fdpPay1kg: 28.39, transporteur: "La Poste" },
 ];
 let TARIFS = JSON.parse(localStorage.getItem('bdc_tarifs') || 'null') || TARIFS_DEFAULT;
+
+// Retourne le bon tarif fdpPay selon la quantité
+function getFdpPay(tarif, qty) {
+  if (!tarif) return null;
+  return qty >= 2 ? tarif.fdpPay1kg : tarif.fdpPay500g;
+}
 
 // ── RELEASES CONFIG ──────────────────────────────────────────────
 const RELEASES_DEF = {
@@ -740,7 +749,7 @@ function updatePreview() {
     const fdpEncOverride = parseFloat(document.getElementById('input-fdp-enc').value);
     const fdpPayOverride = parseFloat(document.getElementById('input-fdp-pay').value);
     const fdpEnc = !isNaN(fdpEncOverride) ? fdpEncOverride : (tarif ? tarif.fdpEnc : null);
-    const fdpPay = !isNaN(fdpPayOverride) ? fdpPayOverride : (tarif ? tarif.fdpPay : null);
+    const fdpPay = !isNaN(fdpPayOverride) ? fdpPayOverride : getFdpPay(tarif, qty);
     if (tarif || !isNaN(fdpEncOverride)) {
       document.getElementById('prev-fdp-enc').textContent = fdpEnc !== null ? fmt(fdpEnc) : '—';
       document.getElementById('prev-fdp-pay').textContent = fdpPay !== null ? fmt(fdpPay) : '?';
@@ -903,7 +912,7 @@ function updateStats() {
     const t      = TARIFS.find(t => t.pays === c.pays);
     const qty    = c.qty || 1;
     const fdpEnc = c.fdpEncOverride !== null && c.fdpEncOverride !== undefined ? c.fdpEncOverride : (t ? t.fdpEnc : 0);
-    const fdpPay = c.fdpPayOverride !== null && c.fdpPayOverride !== undefined ? c.fdpPayOverride : (t ? t.fdpPay : null);
+    const fdpPay = c.fdpPayOverride !== null && c.fdpPayOverride !== undefined ? c.fdpPayOverride : getFdpPay(t, c.qty||1);
     recettesBC += (params.prix||0) * qty + fdpEnc;
     if (fdpPay) fdpPayes += fdpPay;
   });
@@ -945,7 +954,7 @@ function renderHistory() {
     if (cmd.type === 'bigcartel') {
       const t     = TARIFS.find(t => t.pays === cmd.pays);
       const fdpEnc = cmd.fdpEncOverride !== null && cmd.fdpEncOverride !== undefined ? cmd.fdpEncOverride : (t ? t.fdpEnc : null);
-      const fdpPay = cmd.fdpPayOverride !== null && cmd.fdpPayOverride !== undefined ? cmd.fdpPayOverride : (t ? t.fdpPay : null);
+      const fdpPay = cmd.fdpPayOverride !== null && cmd.fdpPayOverride !== undefined ? cmd.fdpPayOverride : getFdpPay(t, cmd.qty||1);
       const marge  = fdpEnc !== null && fdpPay !== null ? fmt((params.prix||0) * (cmd.qty||1) + fdpEnc - fdpPay) : '?';
       const fdp    = fdpPay !== null ? fmt(fdpPay) : '?';
       const statutClass = cmd.statut === 'envoye' ? 'envoye' : cmd.statut === 'preorder' ? 'preorder' : 'attente';
@@ -1052,9 +1061,10 @@ function openModal() {
   const tbody = document.getElementById('tarifs-tbody');
   tbody.innerHTML = TARIFS.map((t, i) => `
     <tr>
-      <td class="pays-name">${t.pays}</td>
+      <td class="pays-name" style="font-size:10px">${t.pays}<br><span style="color:#999;font-size:9px">${t.transporteur||''}</span></td>
       <td><input type="number" step="0.01" value="${t.fdpEnc}" id="t-enc-${i}" /></td>
-      <td><input type="number" step="0.01" value="${t.fdpPay !== null ? t.fdpPay : ''}" placeholder="?" id="t-pay-${i}" /></td>
+      <td><input type="number" step="0.01" value="${t.fdpPay500g !== undefined ? t.fdpPay500g : ''}" placeholder="?" id="t-pay500-${i}" /></td>
+      <td><input type="number" step="0.01" value="${t.fdpPay1kg !== undefined ? t.fdpPay1kg : ''}" placeholder="?" id="t-pay1kg-${i}" /></td>
     </tr>`).join('');
 
   document.getElementById('modal').classList.add('open');
@@ -1072,8 +1082,9 @@ function saveParams() {
   // Sauver tarifs modifiés
   TARIFS = TARIFS.map((t, i) => ({
     ...t,
-    fdpEnc: parseFloat(document.getElementById('t-enc-'+i).value) || t.fdpEnc,
-    fdpPay: document.getElementById('t-pay-'+i).value !== '' ? parseFloat(document.getElementById('t-pay-'+i).value) : null,
+    fdpEnc:     parseFloat(document.getElementById('t-enc-'+i).value)    || t.fdpEnc,
+    fdpPay500g: document.getElementById('t-pay500-'+i).value !== '' ? parseFloat(document.getElementById('t-pay500-'+i).value) : t.fdpPay500g,
+    fdpPay1kg:  document.getElementById('t-pay1kg-'+i).value !== '' ? parseFloat(document.getElementById('t-pay1kg-'+i).value) : t.fdpPay1kg,
   }));
   localStorage.setItem('bdc_tarifs', JSON.stringify(TARIFS));
   if (window._fbSaveParams) window._fbSaveParams({ ...allParams, _tarifs: TARIFS });
