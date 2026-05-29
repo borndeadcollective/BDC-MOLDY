@@ -150,7 +150,8 @@ header {
 
 .statut-btn { background: none; border: 1px solid transparent; cursor: pointer; font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; transition: all 0.15s; white-space: nowrap; }
 .statut-btn.envoye  { color: var(--green); border-color: rgba(26,122,52,0.3); }
-.statut-btn.attente { color: #e67e22; border-color: rgba(230,126,34,0.3); }
+.statut-btn.attente   { color: #e67e22; border-color: rgba(230,126,34,0.3); }
+.statut-btn.preorder { color: #1a6ea8; border-color: rgba(26,110,168,0.3); }
 .statut-btn:hover { opacity: 0.7; }
 
 .del-btn  { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px; padding: 3px 6px; transition: color 0.15s; }
@@ -323,6 +324,7 @@ header {
       <div class="form-group">
         <label>Statut</label>
         <select id="input-statut">
+          <option value="preorder">Preorder</option>
           <option value="en_attente">En attente d'envoi</option>
           <option value="envoye">Envoyé</option>
         </select>
@@ -508,6 +510,7 @@ header {
       <div class="form-group"><label>Date</label><input type="date" id="edit-date" /></div>
       <div class="form-group"><label>Statut</label>
         <select id="edit-statut">
+          <option value="preorder">Preorder</option>
           <option value="en_attente">En attente d'envoi</option>
           <option value="envoye">Envoyé</option>
         </select>
@@ -573,6 +576,9 @@ const TARIFS_DEFAULT = [
   { pays: "Portugal",       fdpEnc: 7.50,  fdpPay: 6.00  },
   { pays: "Pologne",        fdpEnc: 8.00,  fdpPay: 7.00  },
   { pays: "United Kingdom", fdpEnc: 20.00, fdpPay: null  },
+  { pays: "Suède",          fdpEnc: 17.00, fdpPay: 14.99 },
+  { pays: "Norvège",        fdpEnc: 25.00, fdpPay: 23.79 },
+  { pays: "Finlande",       fdpEnc: 17.00, fdpPay: 14.99 },
 ];
 let TARIFS = JSON.parse(localStorage.getItem('bdc_tarifs') || 'null') || TARIFS_DEFAULT;
 
@@ -848,7 +854,8 @@ function clearAll() {
 function toggleStatut(id) {
   const cmd = commandes.find(c => c.id === id);
   if (!cmd) return;
-  cmd.statut = cmd.statut === 'envoye' ? 'en_attente' : 'envoye';
+  const cycle = { 'preorder': 'en_attente', 'en_attente': 'envoye', 'envoye': 'preorder' };
+  cmd.statut = cycle[cmd.statut] || 'en_attente';
   saveAll();
   renderHistory();
 }
@@ -912,8 +919,9 @@ function renderHistory() {
       const t     = TARIFS.find(t => t.pays === cmd.pays);
       const marge = t && t.fdpPay !== null ? fmt((params.prix||0) + t.fdpEnc - t.fdpPay) : '?';
       const fdp   = t && t.fdpPay !== null ? fmt(t.fdpPay) : '?';
-      const isEnvoye = cmd.statut === 'envoye';
-      const statBtn  = `<button class="statut-btn ${isEnvoye?'envoye':'attente'}" onclick="toggleStatut(${cmd.id})">${isEnvoye?'Envoyé':'En attente'}</button>`;
+      const statutClass = cmd.statut === 'envoye' ? 'envoye' : cmd.statut === 'preorder' ? 'preorder' : 'attente';
+      const statutLabel = cmd.statut === 'envoye' ? 'Envoyé' : cmd.statut === 'preorder' ? 'Preorder' : 'En attente';
+      const statBtn = `<button class="statut-btn ${statutClass}" onclick="toggleStatut(${cmd.id})">${statutLabel}</button>`;
       return `<tr>
         <td>${cmd.date}</td>
         <td><span class="badge badge-bc">BC</span></td>
