@@ -577,15 +577,15 @@ header {
 // fdpPay500g = ce que tu paies pour 1 LP (500g)
 // fdpPay1kg  = ce que tu paies pour 2 LP (1kg)
 const TARIFS_DEFAULT = [
-  { pays: "France",         fdpEnc: 5.50,  fdpPay500g: 5.00,  fdpPay1kg: 5.99,  transporteur: "Mondial Relay" },
-  { pays: "Belgique",       fdpEnc: 7.00,  fdpPay500g: 6.00,  fdpPay1kg: 6.60,  transporteur: "Mondial Relay" },
-  { pays: "Espagne",        fdpEnc: 8.00,  fdpPay500g: 6.00,  fdpPay1kg: 9.50,  transporteur: "Mondial Relay" },
-  { pays: "Allemagne",      fdpEnc: 14.00, fdpPay500g: 10.00, fdpPay1kg: 13.80, transporteur: "Mondial Relay" },
-  { pays: "Italie",         fdpEnc: 8.00,  fdpPay500g: 6.50,  fdpPay1kg: 9.50,  transporteur: "Mondial Relay" },
-  { pays: "Pays-Bas",       fdpEnc: 6.00,  fdpPay500g: 5.00,  fdpPay1kg: 6.60,  transporteur: "Mondial Relay" },
-  { pays: "Luxembourg",     fdpEnc: 6.00,  fdpPay500g: 5.00,  fdpPay1kg: 6.60,  transporteur: "Mondial Relay" },
-  { pays: "Portugal",       fdpEnc: 7.50,  fdpPay500g: 6.00,  fdpPay1kg: 9.50,  transporteur: "Mondial Relay" },
-  { pays: "Pologne",        fdpEnc: 8.00,  fdpPay500g: 7.00,  fdpPay1kg: 10.40, transporteur: "Mondial Relay" },
+  { pays: "France",         fdpEnc: 5.50,  fdpPay500g: 4.10,  fdpPay1kg: 5.99,  transporteur: "Mondial Relay" },
+  { pays: "Belgique",       fdpEnc: 7.00,  fdpPay500g: 4.60,  fdpPay1kg: 6.60,  transporteur: "Mondial Relay" },
+  { pays: "Espagne",        fdpEnc: 8.00,  fdpPay500g: 6.60,  fdpPay1kg: 9.50,  transporteur: "Mondial Relay" },
+  { pays: "Allemagne",      fdpEnc: 14.00, fdpPay500g: 12.50, fdpPay1kg: 13.80, transporteur: "Mondial Relay" },
+  { pays: "Italie",         fdpEnc: 8.00,  fdpPay500g: 6.60,  fdpPay1kg: 9.50,  transporteur: "Mondial Relay" },
+  { pays: "Pays-Bas",       fdpEnc: 6.00,  fdpPay500g: 4.60,  fdpPay1kg: 6.60,  transporteur: "Mondial Relay" },
+  { pays: "Luxembourg",     fdpEnc: 6.00,  fdpPay500g: 4.60,  fdpPay1kg: 6.60,  transporteur: "Mondial Relay" },
+  { pays: "Portugal",       fdpEnc: 7.50,  fdpPay500g: 6.60,  fdpPay1kg: 9.50,  transporteur: "Mondial Relay" },
+  { pays: "Pologne",        fdpEnc: 8.00,  fdpPay500g: 7.20,  fdpPay1kg: 10.40, transporteur: "Mondial Relay" },
   { pays: "Autriche",       fdpEnc: 16.00, fdpPay500g: 14.99, fdpPay1kg: 19.39, transporteur: "La Poste" },
   { pays: "Suède",          fdpEnc: 17.00, fdpPay500g: 14.99, fdpPay1kg: 19.39, transporteur: "La Poste" },
   { pays: "Finlande",       fdpEnc: 17.00, fdpPay500g: 14.99, fdpPay1kg: 19.39, transporteur: "La Poste" },
@@ -593,6 +593,10 @@ const TARIFS_DEFAULT = [
   { pays: "United Kingdom", fdpEnc: 20.00, fdpPay500g: 18.99, fdpPay1kg: 23.39, transporteur: "La Poste" },
   { pays: "Norvège",        fdpEnc: 25.00, fdpPay500g: 23.79, fdpPay1kg: 28.39, transporteur: "La Poste" },
 ];
+// Reset si ancien format sans fdpPay500g
+const _storedTarifs = JSON.parse(localStorage.getItem('bdc_tarifs') || 'null');
+const _needsReset = _storedTarifs && _storedTarifs[0] && _storedTarifs[0].fdpPay500g === undefined;
+if (_needsReset) localStorage.removeItem('bdc_tarifs');
 let TARIFS = JSON.parse(localStorage.getItem('bdc_tarifs') || 'null') || TARIFS_DEFAULT;
 
 // Retourne le bon tarif fdpPay selon la quantité
