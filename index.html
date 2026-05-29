@@ -330,6 +330,14 @@ header {
         </select>
       </div>
       <div class="form-group">
+        <label>FdP encaissé (€) — optionnel</label>
+        <input type="number" id="input-fdp-enc" step="0.01" placeholder="laisser vide = tarif pays" />
+      </div>
+      <div class="form-group">
+        <label>FdP payé (€) — optionnel</label>
+        <input type="number" id="input-fdp-pay" step="0.01" placeholder="laisser vide = tarif pays" />
+      </div>
+      <div class="form-group">
         <label>Note (optionnel)</label>
         <input type="text" id="input-note-bc" placeholder="ex: adresse incorrecte..." />
       </div>
@@ -515,6 +523,8 @@ header {
           <option value="envoye">Envoyé</option>
         </select>
       </div>
+      <div class="form-group"><label>FdP encaissé (€) — vide = tarif pays</label><input type="number" id="edit-fdp-enc" step="0.01" /></div>
+      <div class="form-group"><label>FdP payé (€) — vide = tarif pays</label><input type="number" id="edit-fdp-pay" step="0.01" /></div>
       <div class="form-group"><label>Note</label><input type="text" id="edit-note-bc" /></div>
     </div>
     <div id="edit-form-ph" style="display:none">
@@ -666,6 +676,8 @@ async function init() {
 
   document.getElementById('input-pays').addEventListener('change', updatePreview);
   document.getElementById('input-num').addEventListener('input', updatePreview);
+  document.getElementById('input-fdp-enc').addEventListener('input', updatePreview);
+  document.getElementById('input-fdp-pay').addEventListener('input', updatePreview);
   document.getElementById('input-qty').addEventListener('input', updatePreview);
   document.getElementById('input-distro-qty').addEventListener('input', updatePreview);
   document.getElementById('input-distro-prix').addEventListener('input', updatePreview);
@@ -725,10 +737,14 @@ function updatePreview() {
     const qty   = parseInt(document.getElementById('input-num').value) || 1;
     const tarif = TARIFS.find(t => t.pays === pays);
     document.getElementById('prev-vinyl').textContent = fmt(prix * qty);
-    if (tarif) {
-      document.getElementById('prev-fdp-enc').textContent = fmt(tarif.fdpEnc);
-      document.getElementById('prev-fdp-pay').textContent = tarif.fdpPay !== null ? fmt(tarif.fdpPay) : '?';
-      const marge = tarif.fdpPay !== null ? prix * qty + tarif.fdpEnc - tarif.fdpPay : null;
+    const fdpEncOverride = parseFloat(document.getElementById('input-fdp-enc').value);
+    const fdpPayOverride = parseFloat(document.getElementById('input-fdp-pay').value);
+    const fdpEnc = !isNaN(fdpEncOverride) ? fdpEncOverride : (tarif ? tarif.fdpEnc : null);
+    const fdpPay = !isNaN(fdpPayOverride) ? fdpPayOverride : (tarif ? tarif.fdpPay : null);
+    if (tarif || !isNaN(fdpEncOverride)) {
+      document.getElementById('prev-fdp-enc').textContent = fdpEnc !== null ? fmt(fdpEnc) : '—';
+      document.getElementById('prev-fdp-pay').textContent = fdpPay !== null ? fmt(fdpPay) : '?';
+      const marge = fdpPay !== null && fdpEnc !== null ? prix * qty + fdpEnc - fdpPay : null;
       const el = document.getElementById('prev-total');
       el.textContent = marge !== null ? fmt(marge) : '?';
       el.className   = marge !== null ? (marge >= 0 ? 'cval pos' : 'cval neg') : 'cval';
@@ -782,10 +798,17 @@ function addCommande() {
     const statut = document.getElementById('input-statut').value;
     const note   = document.getElementById('input-note-bc').value.trim();
     if (!pays) { shake('input-pays'); return; }
-    commandes.push({ id: Date.now(), type:'bigcartel', qty, pays, statut, note, date: today });
-    document.getElementById('input-num').value    = 1;
-    document.getElementById('input-pays').value   = '';
-    document.getElementById('input-note-bc').value= '';
+    const fdpEncIn = parseFloat(document.getElementById('input-fdp-enc').value);
+    const fdpPayIn = parseFloat(document.getElementById('input-fdp-pay').value);
+    const fdpEncVal = !isNaN(fdpEncIn) ? fdpEncIn : null;
+    const fdpPayVal = !isNaN(fdpPayIn) ? fdpPayIn : null;
+    commandes.push({ id: Date.now(), type:'bigcartel', qty, pays, statut, note,
+      fdpEncOverride: fdpEncVal, fdpPayOverride: fdpPayVal, date: today });
+    document.getElementById('input-num').value     = 1;
+    document.getElementById('input-pays').value    = '';
+    document.getElementById('input-fdp-enc').value = '';
+    document.getElementById('input-fdp-pay').value = '';
+    document.getElementById('input-note-bc').value = '';
   } else if (currentType === 'physique') {
     const qty      = parseInt(document.getElementById('input-qty').value) || 1;
     const lieu     = document.getElementById('input-lieu').value.trim();
@@ -877,10 +900,12 @@ function updateStats() {
 
   let recettesBC = 0, fdpPayes = 0;
   bc.forEach(c => {
-    const t   = TARIFS.find(t => t.pays === c.pays);
-    const qty = c.qty || 1;
-    recettesBC += (params.prix||0) * qty + (t ? t.fdpEnc : 0);
-    if (t && t.fdpPay) fdpPayes += t.fdpPay;
+    const t      = TARIFS.find(t => t.pays === c.pays);
+    const qty    = c.qty || 1;
+    const fdpEnc = c.fdpEncOverride !== null && c.fdpEncOverride !== undefined ? c.fdpEncOverride : (t ? t.fdpEnc : 0);
+    const fdpPay = c.fdpPayOverride !== null && c.fdpPayOverride !== undefined ? c.fdpPayOverride : (t ? t.fdpPay : null);
+    recettesBC += (params.prix||0) * qty + fdpEnc;
+    if (fdpPay) fdpPayes += fdpPay;
   });
   const recettesPH     = ph.reduce((s,c) => s + (c.qty||1)*(params.prix||0), 0);
   const recettesDistro = distro.reduce((s,c) => s + (c.qty||1)*(c.prixUnit||0)*(c.tauxEUR||1), 0);
@@ -919,8 +944,10 @@ function renderHistory() {
   const rows = [...filtered].reverse().map(cmd => {
     if (cmd.type === 'bigcartel') {
       const t     = TARIFS.find(t => t.pays === cmd.pays);
-      const marge = t && t.fdpPay !== null ? fmt((params.prix||0) * (cmd.qty||1) + t.fdpEnc - t.fdpPay) : '?';
-      const fdp   = t && t.fdpPay !== null ? fmt(t.fdpPay) : '?';
+      const fdpEnc = cmd.fdpEncOverride !== null && cmd.fdpEncOverride !== undefined ? cmd.fdpEncOverride : (t ? t.fdpEnc : null);
+      const fdpPay = cmd.fdpPayOverride !== null && cmd.fdpPayOverride !== undefined ? cmd.fdpPayOverride : (t ? t.fdpPay : null);
+      const marge  = fdpEnc !== null && fdpPay !== null ? fmt((params.prix||0) * (cmd.qty||1) + fdpEnc - fdpPay) : '?';
+      const fdp    = fdpPay !== null ? fmt(fdpPay) : '?';
       const statutClass = cmd.statut === 'envoye' ? 'envoye' : cmd.statut === 'preorder' ? 'preorder' : 'attente';
       const statutLabel = cmd.statut === 'envoye' ? 'Envoyé' : cmd.statut === 'preorder' ? 'Preorder' : 'En attente';
       const statBtn = `<button class="statut-btn ${statutClass}" onclick="toggleStatut(${cmd.id})">${statutLabel}</button>`;
@@ -1080,10 +1107,12 @@ function openEditModal(id) {
   document.getElementById('edit-form-groupe').style.display = cmd.type==='groupe'    ? 'block':'none';
 
   if (cmd.type === 'bigcartel') {
-    document.getElementById('edit-num').value    = cmd.qty    || 1;
-    document.getElementById('edit-date').value   = cmd.date   || '';
-    document.getElementById('edit-statut').value = cmd.statut || 'en_attente';
-    document.getElementById('edit-note-bc').value= cmd.note   || '';
+    document.getElementById('edit-num').value     = cmd.qty    || 1;
+    document.getElementById('edit-date').value    = cmd.date   || '';
+    document.getElementById('edit-statut').value  = cmd.statut || 'en_attente';
+    document.getElementById('edit-fdp-enc').value = cmd.fdpEncOverride !== null && cmd.fdpEncOverride !== undefined ? cmd.fdpEncOverride : '';
+    document.getElementById('edit-fdp-pay').value = cmd.fdpPayOverride !== null && cmd.fdpPayOverride !== undefined ? cmd.fdpPayOverride : '';
+    document.getElementById('edit-note-bc').value = cmd.note   || '';
     const sel = document.getElementById('edit-pays');
     if (sel.options.length === 0) {
       TARIFS.forEach(t => { const o = document.createElement('option'); o.value=t.pays; o.textContent=t.pays; sel.appendChild(o); });
@@ -1130,6 +1159,10 @@ function saveEdit() {
     cmd.date   = document.getElementById('edit-date').value;
     cmd.statut = document.getElementById('edit-statut').value;
     cmd.note   = document.getElementById('edit-note-bc').value.trim();
+    const eEnc = parseFloat(document.getElementById('edit-fdp-enc').value);
+    const ePay = parseFloat(document.getElementById('edit-fdp-pay').value);
+    cmd.fdpEncOverride = !isNaN(eEnc) ? eEnc : null;
+    cmd.fdpPayOverride = !isNaN(ePay) ? ePay : null;
   } else if (cmd.type === 'physique') {
     cmd.qty      = parseInt(document.getElementById('edit-qty').value) || 1;
     cmd.lieu     = document.getElementById('edit-lieu').value.trim();
