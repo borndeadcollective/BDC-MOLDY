@@ -184,6 +184,37 @@ header {
 .grouped-release input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #1a1a1a; }
 .badge-grouped { background: #f5f0e8; color: #8a6000; border: 1px solid #e8d5a0; }
 
+/* BARRE DE PROGRESSION */
+.progress-bar-wrap { background: #e8e8e8; height: 10px; border-radius: 0; overflow: hidden; margin-top: 6px; }
+.progress-bar-fill { height: 100%; background: #1a1a1a; transition: width 0.5s ease; }
+.progress-bar-fill.green { background: var(--green); }
+.stat-progress { font-size: 9px; color: var(--muted); margin-top: 3px; }
+
+/* ONGLET FINANCES */
+.finances-panel { display: none; padding: 28px 32px; }
+.finances-panel.active { display: block; }
+.fin-section { margin-bottom: 32px; }
+.fin-section-title { font-family: var(--font-display); font-size: 16px; letter-spacing: 3px; color: #1a1a1a; border-bottom: 2px solid #1a1a1a; padding-bottom: 8px; margin-bottom: 16px; }
+.fin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.fin-card { background: #fff; border: 1px solid var(--border); padding: 18px; }
+.fin-card-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.fin-card-value { font-family: var(--font-display); font-size: 28px; line-height: 1; color: #1a1a1a; }
+.fin-card-value.green { color: var(--green); }
+.fin-card-value.red   { color: var(--red); }
+.fin-card-sub { font-size: 10px; color: var(--muted); margin-top: 4px; }
+.fin-release-row { display: flex; align-items: center; gap: 16px; padding: 14px 16px; background: #fff; border: 1px solid var(--border); margin-bottom: 8px; }
+.fin-release-name { font-family: var(--font-display); font-size: 14px; letter-spacing: 2px; width: 200px; flex-shrink: 0; }
+.fin-release-bar { flex: 1; }
+.fin-release-stats { font-size: 10px; color: var(--muted); width: 180px; text-align: right; flex-shrink: 0; }
+.fin-release-balance { font-family: var(--font-display); font-size: 18px; width: 120px; text-align: right; flex-shrink: 0; }
+
+/* ALERTE DISTRO */
+.distro-alert-30 { background: #fff8e1; border-left: 3px solid #f39c12 !important; }
+.distro-alert-60 { background: #fde8e8; border-left: 3px solid var(--red) !important; }
+.alert-badge { font-size: 9px; padding: 2px 6px; font-weight: 700; letter-spacing: 1px; }
+.alert-badge.warn { background: #f39c12; color: #fff; }
+.alert-badge.danger { background: var(--red); color: #fff; }
+
 /* TABLE TARIFS */
 .tarifs-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 11px; }
 .tarifs-table th { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
@@ -272,14 +303,20 @@ header {
 </header>
 
 <div class="release-nav">
-  <button class="release-tab active" onclick="switchRelease('bdc010', this)">
+  <button class="release-tab active" onclick="switchRelease('bdc007', this)" id="tab-bdc007">
+    BDC-007<span class="tab-sub">Soul Hater — Astral Malefactor</span>
+  </button>
+  <button class="release-tab" onclick="switchRelease('bdc010', this)" id="tab-bdc010">
     BDC-010<span class="tab-sub">Moldy — Do Not Resuscitate</span>
   </button>
-  <button class="release-tab" onclick="switchRelease('bdc012', this)">
+  <button class="release-tab" onclick="switchRelease('bdc012', this)" id="tab-bdc012">
     BDC-012<span class="tab-sub">Corruption Pact — Unanswered Cries</span>
   </button>
-  <button class="release-tab" onclick="switchRelease('bdc013', this)">
+  <button class="release-tab" onclick="switchRelease('bdc013', this)" id="tab-bdc013">
     BDC-013<span class="tab-sub">Take it in Blood — Exit from Life</span>
+  </button>
+  <button class="release-tab" onclick="switchToFinances(this)" id="tab-finances">
+    FINANCES<span class="tab-sub">Vue globale label</span>
   </button>
 </div>
 
@@ -303,6 +340,10 @@ header {
     <div class="stat-label">Balance</div>
     <div class="stat-value" id="stat-balance">—</div>
     <div class="stat-sub" id="stat-balance-sub"></div>
+    <div class="progress-bar-wrap" style="margin-top:8px">
+      <div class="progress-bar-fill" id="stat-progress-bar" style="width:0%"></div>
+    </div>
+    <div class="stat-progress" id="stat-progress-label"></div>
   </div>
 </div>
 
@@ -448,6 +489,12 @@ header {
       <div class="form-group">
         <label>Cocher les releases concernées</label>
         <div id="grouped-releases" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+          <div id="grp-row-bdc007" onclick="toggleGrouped('bdc007')" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface2);border:2px solid var(--border);cursor:pointer;user-select:none;transition:all 0.15s;">
+            <div id="grp-check-bdc007" style="width:22px;height:22px;border:2px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;"></div>
+            <span id="grp-label-bdc007" style="font-size:12px;font-weight:600;flex:1;">BDC-007 — Soul Hater (CD)</span>
+            <input type="number" id="grp-qty-bdc007" min="1" value="1" style="display:none;width:55px;background:#fff;border:1px solid #ccc;padding:4px 6px;font-family:var(--font-mono);font-size:12px;" oninput="updateGroupedPreview()" onclick="event.stopPropagation()" />
+            <span id="grp-qty-label-bdc007" style="display:none;font-size:10px;color:var(--muted)">ex.</span>
+          </div>
           <div id="grp-row-bdc010" onclick="toggleGrouped('bdc010')" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface2);border:2px solid var(--border);cursor:pointer;user-select:none;transition:all 0.15s;">
             <div id="grp-check-bdc010" style="width:22px;height:22px;border:2px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;"></div>
             <span id="grp-label-bdc010" style="font-size:12px;font-weight:600;flex:1;">BDC-010 — Moldy</span>
@@ -620,6 +667,29 @@ header {
   </div>
 </div>
 
+<!-- PANNEAU FINANCES -->
+<div class="finances-panel" id="finances-panel">
+
+  <!-- GLOBAL -->
+  <div class="fin-section">
+    <div class="fin-section-title">BILAN GLOBAL — BORN DEAD COLLECTIVE</div>
+    <div class="fin-grid" id="fin-global-grid"></div>
+  </div>
+
+  <!-- PAR RELEASE -->
+  <div class="fin-section">
+    <div class="fin-section-title">PAR RELEASE</div>
+    <div id="fin-releases"></div>
+  </div>
+
+  <!-- DISTROS EN ATTENTE -->
+  <div class="fin-section">
+    <div class="fin-section-title">DISTROS — SUIVI PAIEMENTS</div>
+    <div id="fin-distros"></div>
+  </div>
+
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -659,15 +729,16 @@ function getFdpPay(tarif, qty) {
 
 // ── RELEASES CONFIG ──────────────────────────────────────────────
 const RELEASES_DEF = {
-  bdc010: { nom: 'BDC-010', groupe: 'Moldy',             titre: 'Do Not Resuscitate',  stock: 220, prix: 20, prixGroupe: 16, invest: 2019.02 },
-  bdc012: { nom: 'BDC-012', groupe: 'Corruption Pact',   titre: 'Unanswered Cries',    stock: 100, prix: 25, prixGroupe: 16, invest: 1512.84 },
-  bdc013: { nom: 'BDC-013', groupe: 'Take it in Blood',  titre: 'Exit from Life',      stock: 200, prix: 25, prixGroupe: 16, invest: 1437.60 },
+  bdc007: { nom: 'BDC-007', groupe: 'Soul Hater',         titre: 'Astral Malefactor',   stock: 50,  prix: 10, prixGroupe: 6,  invest: 251.00,  format: 'CD' },
+  bdc010: { nom: 'BDC-010', groupe: 'Moldy',              titre: 'Do Not Resuscitate',  stock: 220, prix: 20, prixGroupe: 16, invest: 2019.02, format: 'LP' },
+  bdc012: { nom: 'BDC-012', groupe: 'Corruption Pact',    titre: 'Unanswered Cries',    stock: 112, prix: 25, prixGroupe: 16, invest: 1694.38, format: 'LP' },
+  bdc013: { nom: 'BDC-013', groupe: 'Take it in Blood',   titre: 'Exit from Life',      stock: 200, prix: 25, prixGroupe: 16, invest: 1437.60, format: 'LP' },
 };
 
 // ── STATE ────────────────────────────────────────────────────────
-let currentRelease = localStorage.getItem('bdc_current_release') || 'bdc010';
+let currentRelease = localStorage.getItem('bdc_current_release') || 'bdc007';
 let allParams      = JSON.parse(localStorage.getItem('bdc_all_params')    || 'null') || JSON.parse(JSON.stringify(RELEASES_DEF));
-let allCommandes   = JSON.parse(localStorage.getItem('bdc_all_commandes') || 'null') || { bdc010: [], bdc012: [], bdc013: [] };
+let allCommandes   = JSON.parse(localStorage.getItem('bdc_all_commandes') || 'null') || { bdc007: [], bdc010: [], bdc012: [], bdc013: [] };
 
 // Migrate old single-release data
 if (localStorage.getItem('bdc_commandes')) {
@@ -773,21 +844,7 @@ async function init() {
 }
 
 // ── SWITCH RELEASE ───────────────────────────────────────────────
-function switchRelease(releaseId, btn) {
-  currentRelease = releaseId;
-  localStorage.setItem('bdc_current_release', releaseId);
-  params    = allParams[releaseId]    || JSON.parse(JSON.stringify(RELEASES_DEF[releaseId]));
-  commandes = allCommandes[releaseId] || [];
-  document.querySelectorAll('.release-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const rn = document.getElementById('release-name'); if(rn) rn.textContent = params.nom;
-  filterMode = 'all';
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('.filter-btn').classList.add('active');
-  updateStats();
-  renderHistory();
-  updatePreview();
-}
+// [switchRelease moved to FINANCES section]
 
 // ── TYPE SWITCH ──────────────────────────────────────────────────
 function setType(type) {
@@ -827,7 +884,7 @@ function toggleGrouped(id) {
 }
 
 function updateGroupedPreview() {
-  ['bdc010','bdc012','bdc013'].forEach(id => {
+  ['bdc007','bdc010','bdc012','bdc013'].forEach(id => {
     const selected = groupedSelected.has(id);
     const row   = document.getElementById('grp-row-'+id);
     const check = document.getElementById('grp-check-'+id);
@@ -1002,7 +1059,7 @@ function addCommande() {
     // Reset form
     groupedSelected.clear();
     updateGroupedPreview();
-    ['bdc010','bdc012','bdc013'].forEach(id => {
+    ['bdc007','bdc010','bdc012','bdc013'].forEach(id => {
       const qty = document.getElementById('grp-qty-'+id);
       if (qty) qty.value = 1;
     });
@@ -1107,6 +1164,17 @@ function updateStats() {
   balEl.className   = 'stat-value ' + (balance >= 0 ? 'green' : 'red');
   document.getElementById('stat-balance-sub').textContent =
     balance >= 0 ? 'benefice' : `manque ${fmt(Math.abs(balance))}`;
+
+  // Barre de progression vers l'équilibre
+  const invest = params.invest || 1;
+  const pct = Math.min(100, Math.max(0, Math.round((totalRec / invest) * 100)));
+  const bar = document.getElementById('stat-progress-bar');
+  const barLabel = document.getElementById('stat-progress-label');
+  if (bar) {
+    bar.style.width = pct + '%';
+    bar.className = 'progress-bar-fill' + (pct >= 100 ? ' green' : '');
+  }
+  if (barLabel) barLabel.textContent = pct + '% de l\'investissement récupéré';
 }
 
 // ── HISTORIQUE ───────────────────────────────────────────────────
@@ -1202,9 +1270,18 @@ function renderHistory() {
     } else {
       const recEUR   = (cmd.qty||1)*(cmd.prixUnit||0)*(cmd.tauxEUR||1);
       const recOrig  = cmd.devise && cmd.devise !== 'EUR' ? ` (${fmtDevise((cmd.qty||1)*(cmd.prixUnit||0), cmd.devise)})` : '';
-      return `<tr>
+      const today = new Date().toISOString().split('T')[0];
+      const daysDiff = cmd.date ? Math.floor((new Date(today) - new Date(cmd.date)) / 86400000) : 0;
+      const isPaid = cmd.note && (cmd.note.toLowerCase().includes('payé') || cmd.note.toLowerCase().includes('paye') || cmd.note.toLowerCase().includes('paid'));
+      const alertClass = !isPaid && daysDiff >= 60 ? 'distro-alert-60' : !isPaid && daysDiff >= 30 ? 'distro-alert-30' : '';
+      const alertBadge = !isPaid && daysDiff >= 60
+        ? '<span class="alert-badge danger">+60j</span>'
+        : !isPaid && daysDiff >= 30
+        ? '<span class="alert-badge warn">+30j</span>'
+        : '';
+      return `<tr class="${alertClass}">
         <td>${cmd.date}</td>
-        <td><span class="badge badge-distro">DISTRO</span></td>
+        <td><span class="badge badge-distro">DISTRO</span> ${alertBadge}</td>
         <td>${cmd.qty||1} ex.</td>
         <td>${cmd.nom||'—'}</td>
         <td>${fmt(recEUR)}${recOrig}</td>
@@ -1506,6 +1583,172 @@ function parseCSVLine(line) {
   }
   result.push(current);
   return result;
+}
+
+// ── FINANCES ────────────────────────────────────────────────────
+let inFinancesMode = false;
+
+function switchToFinances(btn) {
+  inFinancesMode = true;
+  document.querySelectorAll('.release-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Masquer le reste, afficher finances
+  document.querySelector('.stats-bar').style.display = 'none';
+  document.querySelector('.main').style.display = 'none';
+  document.getElementById('finances-panel').classList.add('active');
+  renderFinances();
+}
+
+function switchRelease(releaseId, btn) {
+  inFinancesMode = false;
+  document.querySelector('.stats-bar').style.display = '';
+  document.querySelector('.main').style.display = '';
+  document.getElementById('finances-panel').classList.remove('active');
+  currentRelease = releaseId;
+  localStorage.setItem('bdc_current_release', releaseId);
+  params    = allParams[releaseId]    || JSON.parse(JSON.stringify(RELEASES_DEF[releaseId]));
+  commandes = allCommandes[releaseId] || [];
+  document.querySelectorAll('.release-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterMode = 'all';
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.filter-btn').classList.add('active');
+  updateStats();
+  renderHistory();
+  updatePreview();
+}
+
+function renderFinances() {
+  const releases = ['bdc007', 'bdc010', 'bdc012', 'bdc013'];
+  let totalInvest = 0, totalRec = 0, totalFdpPayes = 0;
+
+  // Calculer par release
+  const releaseData = releases.map(rid => {
+    const p   = allParams[rid]    || RELEASES_DEF[rid];
+    const cms = allCommandes[rid] || [];
+    const bc     = cms.filter(c => c.type === 'bigcartel');
+    const ph     = cms.filter(c => c.type === 'physique');
+    const distro = cms.filter(c => c.type === 'distro');
+    const groupe = cms.filter(c => c.type === 'groupe');
+
+    let recBC = 0, fdpPay = 0;
+    bc.forEach(cmd => {
+      const t = TARIFS.find(t => t.pays === cmd.pays);
+      const fdpEnc = cmd.fdpEncOverride != null ? cmd.fdpEncOverride : (t ? t.fdpEnc : 0);
+      const fdpP   = cmd.fdpPayOverride != null ? cmd.fdpPayOverride : getFdpPay(t, cmd.qty||1);
+      recBC += (p.prix||0) * (cmd.qty||1) + fdpEnc;
+      if (fdpP) fdpPay += fdpP;
+    });
+    const recPH     = ph.reduce((s,c) => s + (c.qty||1)*(p.prix||0), 0);
+    const recDistro = distro.reduce((s,c) => s + (c.qty||1)*(c.prixUnit||0)*(c.tauxEUR||1), 0);
+    const recGroupe = groupe.reduce((s,c) => s + (c.qty||1)*(c.prixUnit||0), 0);
+    const recTotal  = recBC + recPH + recDistro + recGroupe;
+    const invest    = p.invest || 0;
+    const balance   = recTotal - fdpPay - invest;
+    const pct       = invest > 0 ? Math.min(100, Math.round((recTotal / invest) * 100)) : 0;
+    const nbVentes  = bc.reduce((s,c)=>s+(c.qty||1),0) + ph.reduce((s,c)=>s+(c.qty||1),0) + distro.reduce((s,c)=>s+(c.qty||1),0) + groupe.reduce((s,c)=>s+(c.qty||1),0);
+
+    totalInvest  += invest;
+    totalRec     += recTotal;
+    totalFdpPayes += fdpPay;
+
+    return { rid, p, recTotal, invest, balance, pct, fdpPay, nbVentes, format: p.format||'LP' };
+  });
+
+  const totalBalance = totalRec - totalFdpPayes - totalInvest;
+  const totalPct = totalInvest > 0 ? Math.min(100, Math.round((totalRec / totalInvest) * 100)) : 0;
+
+  // ── Global ──
+  document.getElementById('fin-global-grid').innerHTML = `
+    <div class="fin-card">
+      <div class="fin-card-label">Investissement total</div>
+      <div class="fin-card-value">${fmt(totalInvest)}</div>
+      <div class="fin-card-sub">4 releases</div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-card-label">Recettes totales</div>
+      <div class="fin-card-value">${fmt(totalRec)}</div>
+      <div class="fin-card-sub">toutes ventes confondues</div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-card-label">Balance globale</div>
+      <div class="fin-card-value ${totalBalance >= 0 ? 'green' : 'red'}">${fmt(totalBalance)}</div>
+      <div class="fin-card-sub">${totalBalance >= 0 ? 'bénéfice' : 'manque ' + fmt(Math.abs(totalBalance))}</div>
+    </div>
+    <div class="fin-card" style="grid-column: span 3;">
+      <div class="fin-card-label">Progression globale vers l'équilibre</div>
+      <div class="progress-bar-wrap" style="height:14px;margin-top:8px">
+        <div class="progress-bar-fill${totalPct >= 100 ? ' green' : ''}" style="width:${totalPct}%"></div>
+      </div>
+      <div class="fin-card-sub" style="margin-top:6px">${totalPct}% — ${fmt(totalRec)} récupérés sur ${fmt(totalInvest)} investis</div>
+    </div>`;
+
+  // ── Par release ──
+  document.getElementById('fin-releases').innerHTML = releaseData.map(d => `
+    <div class="fin-release-row">
+      <div class="fin-release-name">${d.p.nom} <span style="font-size:9px;background:#f0f0f0;padding:2px 5px;color:#666">${d.format}</span><br><span style="font-size:10px;color:var(--muted);font-family:var(--font-mono)">${d.p.groupe||''}</span></div>
+      <div class="fin-release-bar">
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill${d.pct >= 100 ? ' green' : ''}" style="width:${d.pct}%"></div>
+        </div>
+        <div class="stat-progress">${d.pct}% — ${d.nbVentes} ventes — FdP payés ${fmt(d.fdpPay)}</div>
+      </div>
+      <div class="fin-release-stats">${fmt(d.recTotal)} / ${fmt(d.invest)}</div>
+      <div class="fin-release-balance ${d.balance >= 0 ? 'green' : 'red'}" style="color:${d.balance >= 0 ? 'var(--green)' : 'var(--red)'}">${fmt(d.balance)}</div>
+    </div>`).join('');
+
+  // ── Distros ──
+  const today = new Date().toISOString().split('T')[0];
+  let distroRows = [];
+  releases.forEach(rid => {
+    const p   = allParams[rid] || RELEASES_DEF[rid];
+    const cms = allCommandes[rid] || [];
+    cms.filter(c => c.type === 'distro').forEach(cmd => {
+      const days = cmd.date ? Math.floor((new Date(today) - new Date(cmd.date)) / 86400000) : 0;
+      const isPaid = cmd.note && (cmd.note.toLowerCase().includes('payé') || cmd.note.toLowerCase().includes('paye') || cmd.note.toLowerCase().includes('paid'));
+      distroRows.push({ ...cmd, release: p.nom, days, isPaid });
+    });
+  });
+
+  if (distroRows.length === 0) {
+    document.getElementById('fin-distros').innerHTML = '<p style="color:var(--muted);font-size:11px">Aucune vente distro enregistrée.</p>';
+    return;
+  }
+
+  document.getElementById('fin-distros').innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:11px;">
+      <thead><tr style="background:#f8f8f8;border-bottom:2px solid var(--border);">
+        <th style="padding:10px 14px;text-align:left;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Date</th>
+        <th style="padding:10px 14px;text-align:left;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Release</th>
+        <th style="padding:10px 14px;text-align:left;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Distro</th>
+        <th style="padding:10px 14px;text-align:left;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Qté</th>
+        <th style="padding:10px 14px;text-align:right;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Montant</th>
+        <th style="padding:10px 14px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Jours</th>
+        <th style="padding:10px 14px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Statut</th>
+        <th style="padding:10px 14px;text-align:left;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Note</th>
+      </tr></thead>
+      <tbody>${distroRows.map(d => {
+        const alertClass = d.isPaid ? '' : d.days >= 60 ? 'distro-alert-60' : d.days >= 30 ? 'distro-alert-30' : '';
+        const alertBadge = d.isPaid
+          ? '<span class="alert-badge" style="background:var(--green);color:#fff">PAYÉ</span>'
+          : d.days >= 60
+          ? '<span class="alert-badge danger">RELANCE !</span>'
+          : d.days >= 30
+          ? '<span class="alert-badge warn">À RELANCER</span>'
+          : '<span style="color:var(--muted);font-size:10px">En attente</span>';
+        const montant = fmt((d.qty||1)*(d.prixUnit||0)*(d.tauxEUR||1));
+        return `<tr class="${alertClass}" style="border-bottom:1px solid #f0f0f0;">
+          <td style="padding:10px 14px">${d.date}</td>
+          <td style="padding:10px 14px;font-weight:600">${d.release}</td>
+          <td style="padding:10px 14px">${d.nom||'—'}</td>
+          <td style="padding:10px 14px">${d.qty||1}</td>
+          <td style="padding:10px 14px;text-align:right">${montant}</td>
+          <td style="padding:10px 14px;text-align:center;color:${d.days >= 60 ? 'var(--red)' : d.days >= 30 ? '#e67e22' : 'var(--muted)'}">${d.days}j</td>
+          <td style="padding:10px 14px;text-align:center">${alertBadge}</td>
+          <td style="padding:10px 14px;color:var(--muted)">${d.note||''}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
 }
 
 // ── GO ───────────────────────────────────────────────────────────
