@@ -239,20 +239,20 @@ header {
   .release-badge { font-size: 12px; padding: 6px 10px; letter-spacing: 1px; }
   .sync-dot { width: 7px; height: 7px; }
 
-  /* RELEASE TABS — scroll horizontal */
+  /* RELEASE TABS */
   .release-nav { padding: 0 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; }
   .release-nav::-webkit-scrollbar { display: none; }
   .release-tab { padding: 10px 12px; font-size: 12px; letter-spacing: 1px; white-space: nowrap; flex-shrink: 0; }
   .release-tab .tab-sub { display: none; }
 
-  /* STATS — 2x2 compact */
+  /* STATS */
   .stats-bar { grid-template-columns: repeat(2, 1fr); }
   .stat { padding: 12px 14px; }
   .stat-label { font-size: 8px; letter-spacing: 1px; }
   .stat-value { font-size: 26px; }
   .stat-sub { font-size: 9px; }
 
-  /* MAIN — vertical */
+  /* MAIN */
   .main { grid-template-columns: 1fr; }
   .panel-left { border-right: none; border-bottom: 1px solid var(--border); padding: 16px; }
   .panel-title { font-size: 15px; }
@@ -262,10 +262,8 @@ header {
   .type-btn { font-size: 13px; padding: 10px 6px; letter-spacing: 1px; }
 
   /* FORM */
-  .form-group input, .form-group select { font-size: 16px; padding: 12px; } /* 16px évite zoom iOS */
+  .form-group input, .form-group select { font-size: 16px; padding: 12px; }
   .btn-add { font-size: 17px; padding: 16px; }
-
-  /* CALC PREVIEW */
   .calc-preview { font-size: 11px; }
 
   /* HISTORIQUE */
@@ -274,10 +272,7 @@ header {
   .filter-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; }
   .filter-bar::-webkit-scrollbar { display: none; }
   .filter-btn { white-space: nowrap; flex-shrink: 0; font-size: 8px; padding: 8px 12px; }
-
-  /* TABLE HISTORIQUE — masquer colonnes secondaires */
   .history-table th, .history-table td { padding: 8px 6px; font-size: 10px; }
-  .col-fdp, .col-note { display: none; }
   .history-table th:nth-child(6),
   .history-table td:nth-child(6),
   .history-table th:nth-child(8),
@@ -287,6 +282,35 @@ header {
   .modal { padding: 20px 16px; width: 95vw; }
   .modal h2 { font-size: 16px; }
   .tarifs-table input { width: 55px; font-size: 11px; }
+
+  /* ── FINANCES MOBILE ── */
+  .finances-panel { padding: 16px; }
+
+  /* Cards globales — 1 colonne */
+  .fin-grid { grid-template-columns: 1fr; gap: 10px; }
+  .fin-grid .fin-card:last-child { grid-column: span 1; }
+  .fin-card { padding: 14px; }
+  .fin-card-label { font-size: 8px; letter-spacing: 2px; }
+  .fin-card-value { font-size: 24px; }
+
+  /* Par release — layout vertical empilé */
+  .fin-release-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 14px;
+  }
+  .fin-release-name { width: 100%; margin-bottom: 2px; font-size: 13px; }
+  .fin-release-bar  { width: 100%; }
+  .fin-release-stats { width: 100%; text-align: left; font-size: 10px; }
+  .fin-release-balance { width: 100%; text-align: left; font-size: 20px; }
+
+  /* Tableau distro — masquer colonnes moins importantes */
+  .fin-distros table { font-size: 10px; }
+  .fin-distros th, .fin-distros td { padding: 8px 6px; }
+  .fin-distros .col-hide { display: none; }
+
+  .fin-section-title { font-size: 13px; letter-spacing: 2px; }
 }
 </style>
 </head>
@@ -1718,14 +1742,14 @@ function renderFinances() {
   document.getElementById('fin-distros').innerHTML = `
     <table style="width:100%;border-collapse:collapse;font-size:11px;">
       <thead><tr style="background:#f8f8f8;border-bottom:2px solid var(--border);">
-        <th style="padding:10px 14px;text-align:left;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Date</th>
+        <th style="padding:10px 14px;text-align:left;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase" class="col-hide">Date</th>
         <th style="padding:10px 14px;text-align:left;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Release</th>
         <th style="padding:10px 14px;text-align:left;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Distro</th>
-        <th style="padding:10px 14px;text-align:left;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Qté</th>
+        <th style="padding:10px 14px;text-align:left;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase" class="col-hide">Qté</th>
         <th style="padding:10px 14px;text-align:right;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Montant</th>
-        <th style="padding:10px 14px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Jours</th>
+        <th style="padding:10px 14px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase" class="col-hide">Jours</th>
         <th style="padding:10px 14px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Statut</th>
-        <th style="padding:10px 14px;text-align:left;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Note</th>
+        <th style="padding:10px 14px;text-align:left;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase" class="col-hide">Note</th>
       </tr></thead>
       <tbody>${distroRows.map(d => {
         const alertClass = d.isPaid ? '' : d.days >= 60 ? 'distro-alert-60' : d.days >= 30 ? 'distro-alert-30' : '';
@@ -1738,14 +1762,14 @@ function renderFinances() {
           : '<span style="color:var(--muted);font-size:10px">En attente</span>';
         const montant = fmt((d.qty||1)*(d.prixUnit||0)*(d.tauxEUR||1));
         return `<tr class="${alertClass}" style="border-bottom:1px solid #f0f0f0;">
-          <td style="padding:10px 14px">${d.date}</td>
+          <td style="padding:10px 14px" class="col-hide">${d.date}</td>
           <td style="padding:10px 14px;font-weight:600">${d.release}</td>
           <td style="padding:10px 14px">${d.nom||'—'}</td>
-          <td style="padding:10px 14px">${d.qty||1}</td>
+          <td style="padding:10px 14px" class="col-hide">${d.qty||1}</td>
           <td style="padding:10px 14px;text-align:right">${montant}</td>
-          <td style="padding:10px 14px;text-align:center;color:${d.days >= 60 ? 'var(--red)' : d.days >= 30 ? '#e67e22' : 'var(--muted)'}">${d.days}j</td>
+          <td style="padding:10px 14px;text-align:center;color:${d.days >= 60 ? 'var(--red)' : d.days >= 30 ? '#e67e22' : 'var(--muted)'}" class="col-hide">${d.days}j</td>
           <td style="padding:10px 14px;text-align:center">${alertBadge}</td>
-          <td style="padding:10px 14px;color:var(--muted)">${d.note||''}</td>
+          <td style="padding:10px 14px;color:var(--muted)" class="col-hide">${d.note||''}</td>
         </tr>`;
       }).join('')}</tbody>
     </table>`;
