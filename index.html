@@ -242,8 +242,9 @@ header {
   /* RELEASE TABS */
   .release-nav { padding: 0 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; }
   .release-nav::-webkit-scrollbar { display: none; }
-  .release-tab { padding: 10px 12px; font-size: 12px; letter-spacing: 1px; white-space: nowrap; flex-shrink: 0; }
-  .release-tab .tab-sub { display: none; }
+  .release-tab { padding: 8px 10px; font-size: 11px; letter-spacing: 1px; white-space: nowrap; flex-shrink: 0; text-align: center; }
+  .release-tab .tab-sub { display: block; font-size: 8px; letter-spacing: 0.5px; color: var(--muted); margin-top: 2px; white-space: nowrap; }
+  .release-tab.active .tab-sub { color: #555; }
 
   /* STATS */
   .stats-bar { grid-template-columns: repeat(2, 1fr); }
@@ -368,6 +369,7 @@ header {
       <div class="progress-bar-fill" id="stat-progress-bar" style="width:0%"></div>
     </div>
     <div class="stat-progress" id="stat-progress-label"></div>
+    <div class="stat-progress" id="stat-equilibre" style="margin-top:4px; color: var(--text); font-weight:600;"></div>
   </div>
 </div>
 
@@ -756,7 +758,7 @@ const RELEASES_DEF = {
   bdc007: { nom: 'BDC-007', groupe: 'Soul Hater',         titre: 'Astral Malefactor',   stock: 50,  prix: 10, prixGroupe: 6,  invest: 251.00,  format: 'CD' },
   bdc010: { nom: 'BDC-010', groupe: 'Moldy',              titre: 'Do Not Resuscitate',  stock: 220, prix: 20, prixGroupe: 16, invest: 2019.02, format: 'LP' },
   bdc012: { nom: 'BDC-012', groupe: 'Corruption Pact',    titre: 'Unanswered Cries',    stock: 112, prix: 25, prixGroupe: 16, invest: 1694.38, format: 'LP' },
-  bdc013: { nom: 'BDC-013', groupe: 'Take it in Blood',   titre: 'Exit from Life',      stock: 200, prix: 25, prixGroupe: 16, invest: 1437.60, format: 'LP' },
+  bdc013: { nom: 'BDC-013', groupe: 'Take it in Blood',   titre: 'Exit from Life',      stock: 211, prix: 25, prixGroupe: 16, invest: 1516.66, format: 'LP' },
 };
 
 // ── STATE ────────────────────────────────────────────────────────
@@ -1199,6 +1201,27 @@ function updateStats() {
     bar.className = 'progress-bar-fill' + (pct >= 100 ? ' green' : '');
   }
   if (barLabel) barLabel.textContent = pct + '% de l\'investissement récupéré';
+
+  // Point d'équilibre
+  const equilibreEl = document.getElementById('stat-equilibre');
+  if (equilibreEl) {
+    const invest    = params.invest || 0;
+    const prixVente = params.prix   || 0;
+    // Recettes déjà acquises hors FdP
+    const recettesHorsFdp = recettesPH + recettesDistro + recettesGroupe +
+      bc.reduce((s, cmd) => s + (params.prix||0) * (cmd.qty||1), 0);
+    const reste = invest - recettesHorsFdp;
+    if (balance >= 0) {
+      equilibreEl.textContent = '✓ Équilibre atteint !';
+      equilibreEl.style.color = 'var(--green)';
+    } else if (prixVente > 0) {
+      const nbRestant = Math.ceil(reste / prixVente);
+      const totalVendu = nbBC + nbPH + nbDistro + nbGroupe;
+      const equilibreA = totalVendu + nbRestant;
+      equilibreEl.textContent = 'Équilibre à la vente n°' + equilibreA + ' (' + nbRestant + ' de plus)';
+      equilibreEl.style.color = 'var(--muted)';
+    }
+  }
 }
 
 // ── HISTORIQUE ───────────────────────────────────────────────────
