@@ -778,6 +778,7 @@ let commandes = allCommandes[currentRelease] || [];
 
 let currentType = 'bigcartel';
 let filterMode  = 'all';
+let filterPays  = '';
 let fxRates     = {}; // cache taux de change
 
 // BDC-010 pré-chargé si vide
@@ -1232,9 +1233,32 @@ function setFilter(mode, btn) {
   renderHistory();
 }
 
+function setPaysFilter() {
+  filterPays = document.getElementById('filter-pays').value;
+  renderHistory();
+}
+
+function populatePaysFilter() {
+  const sel = document.getElementById('filter-pays');
+  if (!sel) return;
+  const paysCount = {};
+  commandes.forEach(c => {
+    if (c.pays) paysCount[c.pays] = (paysCount[c.pays] || 0) + (c.qty || 1);
+  });
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">Tous pays</option>' +
+    Object.entries(paysCount)
+      .sort((a,b) => b[1] - a[1])
+      .map(([pays, count]) => `<option value="${pays}">${pays} (${count})</option>`)
+      .join('');
+  sel.value = currentVal;
+}
+
 function renderHistory() {
+  populatePaysFilter();
   const container = document.getElementById('history-table');
-  const filtered  = filterMode === 'all' ? commandes : commandes.filter(c => c.type === filterMode);
+  let filtered = filterMode === 'all' ? commandes : commandes.filter(c => c.type === filterMode);
+  if (filterPays) filtered = filtered.filter(c => c.pays === filterPays);
   if (filtered.length === 0) {
     container.innerHTML = `<div class="empty-state"><div class="big">—</div><p>Aucune vente enregistrée</p></div>`;
     return;
@@ -1658,6 +1682,7 @@ function switchRelease(releaseId, btn) {
   document.querySelectorAll('.release-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   filterMode = 'all';
+  filterPays = '';
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.filter-btn').classList.add('active');
   updateStats();
