@@ -272,6 +272,7 @@ header {
   .history-title { font-size: 15px; }
   .filter-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; }
   #filter-pays { margin-left: 0 !important; border-left: none !important; border-top: 1px solid var(--border) !important; width: 100%; font-size: 11px !important; padding: 8px 12px !important; }
+  #filter-statut { border-left: none !important; border-top: 1px solid var(--border) !important; width: 100%; font-size: 11px !important; padding: 8px 12px !important; }
   .filter-bar::-webkit-scrollbar { display: none; }
   .filter-btn { white-space: nowrap; flex-shrink: 0; font-size: 8px; padding: 8px 12px; }
   .history-table th, .history-table td { padding: 8px 6px; font-size: 10px; }
@@ -603,6 +604,12 @@ header {
       <select id="filter-pays" onchange="setPaysFilter()" style="margin-left:auto;font-family:var(--font-mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;background:#fff;border:none;border-left:1px solid var(--border);color:var(--muted);padding:9px 16px;cursor:pointer;">
         <option value="">Tous pays</option>
       </select>
+      <select id="filter-statut" onchange="setStatutFilter()" style="font-family:var(--font-mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;background:#fff;border:none;border-left:1px solid var(--border);color:var(--muted);padding:9px 16px;cursor:pointer;">
+        <option value="">Tous statuts</option>
+        <option value="preorder">Preorder</option>
+        <option value="en_attente">En attente</option>
+        <option value="envoye">Envoyé</option>
+      </select>
     </div>
     <div class="history-table" id="history-table"></div>
   </div>
@@ -783,6 +790,7 @@ let commandes = allCommandes[currentRelease] || [];
 let currentType = 'bigcartel';
 let filterMode  = 'all';
 let filterPays  = '';
+let filterStatut = '';
 let fxRates     = {}; // cache taux de change
 
 // BDC-010 pré-chargé si vide
@@ -1242,6 +1250,11 @@ function setPaysFilter() {
   renderHistory();
 }
 
+function setStatutFilter() {
+  filterStatut = document.getElementById('filter-statut').value;
+  renderHistory();
+}
+
 function populatePaysFilter() {
   const sel = document.getElementById('filter-pays');
   if (!sel) return;
@@ -1262,7 +1275,8 @@ function renderHistory() {
   populatePaysFilter();
   const container = document.getElementById('history-table');
   let filtered = filterMode === 'all' ? commandes : commandes.filter(c => c.type === filterMode);
-  if (filterPays) filtered = filtered.filter(c => c.pays === filterPays);
+  if (filterPays)   filtered = filtered.filter(c => c.pays === filterPays);
+  if (filterStatut) filtered = filtered.filter(c => c.statut === filterStatut);
   if (filtered.length === 0) {
     container.innerHTML = `<div class="empty-state"><div class="big">—</div><p>Aucune vente enregistrée</p></div>`;
     return;
@@ -1687,8 +1701,10 @@ function switchRelease(releaseId, btn) {
   btn.classList.add('active');
   filterMode = 'all';
   filterPays = '';
+  filterStatut = '';
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.filter-btn').classList.add('active');
+  const fs = document.getElementById('filter-statut'); if (fs) fs.value = '';
   updateStats();
   renderHistory();
   updatePreview();
