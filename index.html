@@ -314,6 +314,12 @@ header {
   .fin-distros .col-hide { display: none; }
 
   .fin-section-title { font-size: 13px; letter-spacing: 2px; }
+
+  /* EXPÉDITION MOBILE */
+  .exp-fields { grid-template-columns: 1fr; }
+  .exp-field.full { grid-column: span 1; }
+  .exp-card { padding: 12px; }
+  .exp-card-title { font-size: 14px; }
 }
 </style>
 </head>
@@ -342,9 +348,19 @@ header {
   <button class="release-tab" onclick="switchRelease('bdc013', this)" id="tab-bdc013">
     BDC-013<span class="tab-sub">Take it in Blood — Exit from Life</span>
   </button>
+  <button class="release-tab" onclick="switchRelease('bdc014', this)" id="tab-bdc014">
+    BDC-014<span class="tab-sub">Loyal 2 None — Backstabbers</span>
+  </button>
+  <button class="release-tab" onclick="switchRelease('bdc015', this)" id="tab-bdc015">
+    BDC-015<span class="tab-sub">Hard to Handle — Get it over with</span>
+  </button>
+  <button class="release-tab" onclick="switchRelease('bdc016', this)" id="tab-bdc016">
+    BDC-016<span class="tab-sub">Mozdrill — Démo 2026</span>
+  </button>
   <button class="release-tab" onclick="switchToFinances(this)" id="tab-finances">
     FINANCES<span class="tab-sub">Vue globale label</span>
   </button>
+
 </div>
 
 <div class="stats-bar">
@@ -541,6 +557,24 @@ header {
             <input type="number" id="grp-qty-bdc013" min="1" value="1" style="display:none;width:55px;background:#fff;border:1px solid #ccc;padding:4px 6px;font-family:var(--font-mono);font-size:12px;" oninput="updateGroupedPreview()" onclick="event.stopPropagation()" />
             <span id="grp-qty-label-bdc013" style="display:none;font-size:10px;color:var(--muted)">ex.</span>
           </div>
+          <div id="grp-row-bdc014" onclick="toggleGrouped('bdc014')" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface2);border:2px solid var(--border);cursor:pointer;user-select:none;transition:all 0.15s;">
+            <div id="grp-check-bdc014" style="width:22px;height:22px;border:2px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;"></div>
+            <span id="grp-label-bdc014" style="font-size:12px;font-weight:600;flex:1;">BDC-014 — Loyal 2 None (CD)</span>
+            <input type="number" id="grp-qty-bdc014" min="1" value="1" style="display:none;width:55px;background:#fff;border:1px solid #ccc;padding:4px 6px;font-family:var(--font-mono);font-size:12px;" oninput="updateGroupedPreview()" onclick="event.stopPropagation()" />
+            <span id="grp-qty-label-bdc014" style="display:none;font-size:10px;color:var(--muted)">ex.</span>
+          </div>
+          <div id="grp-row-bdc016" onclick="toggleGrouped('bdc016')" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface2);border:2px solid var(--border);cursor:pointer;user-select:none;transition:all 0.15s;">
+            <div id="grp-check-bdc016" style="width:22px;height:22px;border:2px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;"></div>
+            <span id="grp-label-bdc016" style="font-size:12px;font-weight:600;flex:1;">BDC-016 — Mozdrill (Tape)</span>
+            <input type="number" id="grp-qty-bdc016" min="1" value="1" style="display:none;width:55px;background:#fff;border:1px solid #ccc;padding:4px 6px;font-family:var(--font-mono);font-size:12px;" oninput="updateGroupedPreview()" onclick="event.stopPropagation()" />
+            <span id="grp-qty-label-bdc016" style="display:none;font-size:10px;color:var(--muted)">ex.</span>
+          </div>
+          <div id="grp-row-bdc015" onclick="toggleGrouped('bdc015')" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface2);border:2px solid var(--border);cursor:pointer;user-select:none;transition:all 0.15s;">
+            <div id="grp-check-bdc015" style="width:22px;height:22px;border:2px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;"></div>
+            <span id="grp-label-bdc015" style="font-size:12px;font-weight:600;flex:1;">BDC-015 — Hard to Handle (Tape)</span>
+            <input type="number" id="grp-qty-bdc015" min="1" value="1" style="display:none;width:55px;background:#fff;border:1px solid #ccc;padding:4px 6px;font-family:var(--font-mono);font-size:12px;" oninput="updateGroupedPreview()" onclick="event.stopPropagation()" />
+            <span id="grp-qty-label-bdc015" style="display:none;font-size:10px;color:var(--muted)">ex.</span>
+          </div>
         </div>
       </div>
       <div class="form-group">
@@ -633,7 +667,7 @@ header {
 
     <div class="modal-section">Frais de port par pays</div>
     <table class="tarifs-table">
-      <thead><tr><th>Pays</th><th>Encaissé</th><th>1 LP (500g)</th><th>2 LP (1kg)</th></tr></thead>
+      <thead><tr><th>Pays</th><th>Encaissé</th><th>Tape/CD</th><th>1 LP</th><th>2 LP</th></tr></thead>
       <tbody id="tarifs-tbody"></tbody>
     </table>
 
@@ -732,35 +766,38 @@ header {
 <script>
 // ── TARIFS FDP ──────────────────────────────────────────────────
 // TARIFS — modifiables via Paramètres > Frais de port
-// fdpEnc    = ce que tu encaisses du client (Bigcartel)
+// fdpEnc     = ce que tu encaisses du client (Bigcartel)
+// fdpPay250g = ce que tu paies pour tape/CD (<250g) → tranche Mondial Relay 4,15€
 // fdpPay500g = ce que tu paies pour 1 LP (500g)
 // fdpPay1kg  = ce que tu paies pour 2 LP (1kg)
 const TARIFS_DEFAULT = [
-  { pays: "France",         fdpEnc: 5.50,  fdpPay500g: 4.10,  fdpPay1kg: 5.99,  transporteur: "Mondial Relay" },
-  { pays: "Belgique",       fdpEnc: 7.00,  fdpPay500g: 4.60,  fdpPay1kg: 6.60,  transporteur: "Mondial Relay" },
-  { pays: "Espagne",        fdpEnc: 8.00,  fdpPay500g: 6.60,  fdpPay1kg: 9.50,  transporteur: "Mondial Relay" },
-  { pays: "Allemagne",      fdpEnc: 14.00, fdpPay500g: 12.50, fdpPay1kg: 13.80, transporteur: "Mondial Relay" },
-  { pays: "Italie",         fdpEnc: 8.00,  fdpPay500g: 6.60,  fdpPay1kg: 9.50,  transporteur: "Mondial Relay" },
-  { pays: "Pays-Bas",       fdpEnc: 6.00,  fdpPay500g: 4.60,  fdpPay1kg: 6.60,  transporteur: "Mondial Relay" },
-  { pays: "Luxembourg",     fdpEnc: 6.00,  fdpPay500g: 4.60,  fdpPay1kg: 6.60,  transporteur: "Mondial Relay" },
-  { pays: "Portugal",       fdpEnc: 7.50,  fdpPay500g: 6.60,  fdpPay1kg: 9.50,  transporteur: "Mondial Relay" },
-  { pays: "Pologne",        fdpEnc: 8.00,  fdpPay500g: 7.20,  fdpPay1kg: 10.40, transporteur: "Mondial Relay" },
-  { pays: "Autriche",       fdpEnc: 16.00, fdpPay500g: 14.99, fdpPay1kg: 19.39, transporteur: "La Poste" },
-  { pays: "Suède",          fdpEnc: 17.00, fdpPay500g: 14.99, fdpPay1kg: 19.39, transporteur: "La Poste" },
-  { pays: "Finlande",       fdpEnc: 17.00, fdpPay500g: 14.99, fdpPay1kg: 19.39, transporteur: "La Poste" },
-  { pays: "Danemark",       fdpEnc: 17.00, fdpPay500g: 14.99, fdpPay1kg: 19.39, transporteur: "La Poste" },
-  { pays: "United Kingdom", fdpEnc: 20.00, fdpPay500g: 18.99, fdpPay1kg: 23.39, transporteur: "La Poste" },
-  { pays: "Norvège",        fdpEnc: 25.00, fdpPay500g: 23.79, fdpPay1kg: 28.39, transporteur: "La Poste" },
+  { pays: "France",         fdpEnc: 5.50,  fdpPay250g: 4.15,  fdpPay500g: 5.99,  fdpPay1kg: 5.99,  transporteur: "Mondial Relay" },
+  { pays: "Belgique",       fdpEnc: 7.00,  fdpPay250g: 4.15,  fdpPay500g: 5.99,  fdpPay1kg: 6.60,  transporteur: "Mondial Relay" },
+  { pays: "Espagne",        fdpEnc: 8.00,  fdpPay250g: 4.15,  fdpPay500g: 5.99,  fdpPay1kg: 9.50,  transporteur: "Mondial Relay" },
+  { pays: "Allemagne",      fdpEnc: 14.00, fdpPay250g: 4.15,  fdpPay500g: 5.99,  fdpPay1kg: 13.80, transporteur: "Mondial Relay" },
+  { pays: "Italie",         fdpEnc: 8.00,  fdpPay250g: 4.15,  fdpPay500g: 5.99,  fdpPay1kg: 9.50,  transporteur: "Mondial Relay" },
+  { pays: "Pays-Bas",       fdpEnc: 6.00,  fdpPay250g: 4.15,  fdpPay500g: 5.99,  fdpPay1kg: 6.60,  transporteur: "Mondial Relay" },
+  { pays: "Luxembourg",     fdpEnc: 6.00,  fdpPay250g: 4.15,  fdpPay500g: 5.99,  fdpPay1kg: 6.60,  transporteur: "Mondial Relay" },
+  { pays: "Portugal",       fdpEnc: 7.50,  fdpPay250g: 4.15,  fdpPay500g: 5.99,  fdpPay1kg: 9.50,  transporteur: "Mondial Relay" },
+  { pays: "Pologne",        fdpEnc: 8.00,  fdpPay250g: 4.15,  fdpPay500g: 5.99,  fdpPay1kg: 10.40, transporteur: "Mondial Relay" },
+  { pays: "Autriche",       fdpEnc: 16.00, fdpPay250g: 14.99, fdpPay500g: 14.99, fdpPay1kg: 19.39, transporteur: "La Poste" },
+  { pays: "Suède",          fdpEnc: 17.00, fdpPay250g: 14.99, fdpPay500g: 14.99, fdpPay1kg: 19.39, transporteur: "La Poste" },
+  { pays: "Finlande",       fdpEnc: 17.00, fdpPay250g: 14.99, fdpPay500g: 14.99, fdpPay1kg: 19.39, transporteur: "La Poste" },
+  { pays: "Danemark",       fdpEnc: 17.00, fdpPay250g: 14.99, fdpPay500g: 14.99, fdpPay1kg: 19.39, transporteur: "La Poste" },
+  { pays: "United Kingdom", fdpEnc: 20.00, fdpPay250g: 18.99, fdpPay500g: 18.99, fdpPay1kg: 23.39, transporteur: "La Poste" },
+  { pays: "Norvège",        fdpEnc: 25.00, fdpPay250g: 23.79, fdpPay500g: 23.79, fdpPay1kg: 28.39, transporteur: "La Poste" },
 ];
 // Reset si ancien format sans fdpPay500g
 const _storedTarifs = JSON.parse(localStorage.getItem('bdc_tarifs') || 'null');
-const _needsReset = _storedTarifs && _storedTarifs[0] && _storedTarifs[0].fdpPay500g === undefined;
+const _needsReset = _storedTarifs && _storedTarifs[0] && (_storedTarifs[0].fdpPay500g === undefined || _storedTarifs[0].fdpPay250g === undefined);
 if (_needsReset) localStorage.removeItem('bdc_tarifs');
 let TARIFS = JSON.parse(localStorage.getItem('bdc_tarifs') || 'null') || TARIFS_DEFAULT;
 
-// Retourne le bon tarif fdpPay selon la quantité
-function getFdpPay(tarif, qty) {
+// Retourne le bon tarif fdpPay selon la quantité et le format de la release
+function getFdpPay(tarif, qty, format) {
   if (!tarif) return null;
+  const fmt = (format || params.format || 'LP').toUpperCase();
+  if (fmt === 'TAPE' || fmt === 'CD') return tarif.fdpPay250g || tarif.fdpPay500g;
   return qty >= 2 ? tarif.fdpPay1kg : tarif.fdpPay500g;
 }
 
@@ -770,12 +807,15 @@ const RELEASES_DEF = {
   bdc010: { nom: 'BDC-010', groupe: 'Moldy',              titre: 'Do Not Resuscitate',  stock: 220, prix: 20, prixGroupe: 16, invest: 2019.02, format: 'LP' },
   bdc012: { nom: 'BDC-012', groupe: 'Corruption Pact',    titre: 'Unanswered Cries',    stock: 112, prix: 25, prixGroupe: 16, invest: 1694.38, format: 'LP' },
   bdc013: { nom: 'BDC-013', groupe: 'Take it in Blood',   titre: 'Exit from Life',      stock: 211, prix: 25, prixGroupe: 16, invest: 1516.66, format: 'LP' },
+  bdc014: { nom: 'BDC-014', groupe: 'Loyal 2 None',         titre: 'Backstabbers',         stock: 50,  prix: 10, prixGroupe: 6,  invest: 254.00,  format: 'CD' },
+  bdc015: { nom: 'BDC-015', groupe: 'Hard to Handle',       titre: 'Get it over with',    stock: 50,  prix: 6,  prixGroupe: 4,  invest: 202.20,  format: 'Tape' },
+  bdc016: { nom: 'BDC-016', groupe: 'Mozdrill',               titre: 'Démo 2026',           stock: 50,  prix: 10, prixGroupe: 0,  invest: 0,       format: 'Tape' },
 };
 
 // ── STATE ────────────────────────────────────────────────────────
 let currentRelease = localStorage.getItem('bdc_current_release') || 'bdc007';
 let allParams      = JSON.parse(localStorage.getItem('bdc_all_params')    || 'null') || JSON.parse(JSON.stringify(RELEASES_DEF));
-let allCommandes   = JSON.parse(localStorage.getItem('bdc_all_commandes') || 'null') || { bdc007: [], bdc010: [], bdc012: [], bdc013: [] };
+let allCommandes   = JSON.parse(localStorage.getItem('bdc_all_commandes') || 'null') || { bdc007: [], bdc010: [], bdc012: [], bdc013: [], bdc014: [], bdc015: [], bdc016: [] };
 
 // Migrate old single-release data
 if (localStorage.getItem('bdc_commandes')) {
@@ -923,7 +963,7 @@ function toggleGrouped(id) {
 }
 
 function updateGroupedPreview() {
-  ['bdc007','bdc010','bdc012','bdc013'].forEach(id => {
+  ['bdc007','bdc010','bdc012','bdc013','bdc014','bdc015','bdc016'].forEach(id => {
     const selected = groupedSelected.has(id);
     const row   = document.getElementById('grp-row-'+id);
     const check = document.getElementById('grp-check-'+id);
@@ -1098,7 +1138,7 @@ function addCommande() {
     // Reset form
     groupedSelected.clear();
     updateGroupedPreview();
-    ['bdc007','bdc010','bdc012','bdc013'].forEach(id => {
+    ['bdc007','bdc010','bdc012','bdc013','bdc014','bdc015','bdc016'].forEach(id => {
       const qty = document.getElementById('grp-qty-'+id);
       if (qty) qty.value = 1;
     });
@@ -1295,11 +1335,17 @@ function renderHistory() {
       const canalBadge = isGrouped
         ? `<span class="badge badge-grouped">GROUPÉE</span>`
         : `<span class="badge badge-bc">BC</span>`;
+      const cli = cmd.client || {};
+      const cliName = [cli.prenom, cli.nom].filter(Boolean).join(' ');
+      const cliAddr = [cli.adr1, cli.adr2, cli.cp, cli.ville].filter(Boolean).join(', ');
+      const paysCell = cliName
+        ? `${cmd.pays}<br><span style="font-size:9px;color:var(--muted);cursor:${cliAddr?'help':'default'}" ${cliAddr ? `title="${cliAddr.replace(/"/g,'&quot;')}"` : ''}>${cliName}</span>`
+        : cmd.pays;
       return `<tr>
         <td>${cmd.date}</td>
         <td>${canalBadge}</td>
         <td>${cmd.qty||1} ex.</td>
-        <td>${cmd.pays}</td>
+        <td>${paysCell}</td>
         <td>${marge}</td>
         <td style="color:var(--muted)">${fdp}</td>
         <td>${statBtn}</td>
@@ -1407,6 +1453,7 @@ function openModal() {
     <tr>
       <td class="pays-name" style="font-size:10px">${t.pays}<br><span style="color:#999;font-size:9px">${t.transporteur||''}</span></td>
       <td><input type="number" step="0.01" value="${t.fdpEnc}" id="t-enc-${i}" /></td>
+      <td><input type="number" step="0.01" value="${t.fdpPay250g !== undefined ? t.fdpPay250g : ''}" placeholder="?" id="t-pay250-${i}" /></td>
       <td><input type="number" step="0.01" value="${t.fdpPay500g !== undefined ? t.fdpPay500g : ''}" placeholder="?" id="t-pay500-${i}" /></td>
       <td><input type="number" step="0.01" value="${t.fdpPay1kg !== undefined ? t.fdpPay1kg : ''}" placeholder="?" id="t-pay1kg-${i}" /></td>
     </tr>`).join('');
@@ -1427,6 +1474,7 @@ function saveParams() {
   TARIFS = TARIFS.map((t, i) => ({
     ...t,
     fdpEnc:     parseFloat(document.getElementById('t-enc-'+i).value)    || t.fdpEnc,
+    fdpPay250g: document.getElementById('t-pay250-'+i).value !== '' ? parseFloat(document.getElementById('t-pay250-'+i).value) : t.fdpPay250g,
     fdpPay500g: document.getElementById('t-pay500-'+i).value !== '' ? parseFloat(document.getElementById('t-pay500-'+i).value) : t.fdpPay500g,
     fdpPay1kg:  document.getElementById('t-pay1kg-'+i).value !== '' ? parseFloat(document.getElementById('t-pay1kg-'+i).value) : t.fdpPay1kg,
   }));
@@ -1608,6 +1656,20 @@ function showToast(msg) {
 // ── IMPORT CSV BIGCARTEL ────────────────────────────────────────
 const PAYS_ISO_MAP = {"FR": "France", "BE": "Belgique", "ES": "Espagne", "DE": "Allemagne", "IT": "Italie", "NL": "Pays-Bas", "AT": "Autriche", "LU": "Luxembourg", "PT": "Portugal", "PL": "Pologne", "GB": "United Kingdom", "SE": "Su\u00e8de", "NO": "Norv\u00e8ge", "FI": "Finlande", "DK": "Danemark"};
 
+// Détecte la release depuis le texte "Items" du CSV Bigcartel
+// Format: product_name:Take it in Blood - "Exit from Life" LP|...
+function detectReleaseFromItems(itemsText) {
+  if (!itemsText) return null;
+  const lower = itemsText.toLowerCase();
+  for (const [rid, def] of Object.entries(RELEASES_DEF)) {
+    const groupeLower = (def.groupe || '').toLowerCase();
+    const titreLower  = (def.titre  || '').toLowerCase();
+    if (groupeLower && lower.includes(groupeLower)) return rid;
+    if (titreLower  && lower.includes(titreLower))  return rid;
+  }
+  return null;
+}
+
 function importCSV(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -1616,7 +1678,8 @@ function importCSV(event) {
     const text   = e.target.result;
     const lines  = text.split('\n').filter(l => l.trim());
     const headers = parseCSVLine(lines[0]);
-    let imported = 0, skipped = 0;
+    let imported = 0, skipped = 0, unmatched = 0;
+    const importedPerRelease = {};
 
     for (let i = 1; i < lines.length; i++) {
       const vals = parseCSVLine(lines[i]);
@@ -1631,13 +1694,42 @@ function importCSV(event) {
       const note    = row['Note'] || '';
       const date    = (row['Date'] || '').slice(0, 10);
 
-      // Anti-doublon : même date + pays + qty + fdp
-      const exists = commandes.some(c =>
-        c.date === date && c.pays === pays && c.qty === qty && c.fdpEncOverride === fdpEnc
-      );
+      // Infos client pour la vue expédition
+      const prenom  = row['Buyer first name'] || '';
+      const nom     = row['Buyer last name']  || '';
+      const email   = row['Buyer email']      || '';
+      const tel     = row['Buyer phone number'] || '';
+      const adr1    = row['Shipping address 1'] || '';
+      const adr2    = row['Shipping address 2'] || '';
+      const ville   = row['Shipping city']    || '';
+      const cp      = row['Shipping zip']     || '';
+
+      // Détecter la release depuis la colonne Items
+      const releaseId = detectReleaseFromItems(row['Items'] || '');
+      if (!releaseId) { unmatched++; continue; }
+
+      // S'assurer que la liste de commandes de cette release existe
+      allCommandes[releaseId] = allCommandes[releaseId] || [];
+      const targetCommandes = allCommandes[releaseId];
+
+      // Anti-doublon : email connu (commande déjà importée par CSV)
+      // OU nom du client trouvé dans la note (commande rentrée à la main)
+      const fullNameLower = [prenom, nom].filter(Boolean).join(' ').toLowerCase().trim();
+      const exists = targetCommandes.some(c => {
+        const sameCore = c.date === date && c.pays === pays && c.qty === qty;
+        if (!sameCore) return false;
+        // Cas 1 : déjà un email enregistré sur cette ligne -> comparer email
+        if (c.client && c.client.email) return c.client.email === email;
+        // Cas 2 : pas d'email -> comparer le nom tapé dans la note (insensible à la casse)
+        if (fullNameLower && c.note) {
+          return c.note.toLowerCase().includes(fullNameLower);
+        }
+        // Cas 3 : ni email ni nom comparable -> se rabattre sur le FdP comme avant
+        return c.fdpEncOverride === fdpEnc;
+      });
       if (exists) { skipped++; continue; }
 
-      commandes.push({
+      targetCommandes.push({
         id: Date.now() + i + Math.random(),
         type: 'bigcartel',
         qty, pays,
@@ -1645,15 +1737,28 @@ function importCSV(event) {
         fdpEncOverride: fdpEnc,
         fdpPayOverride: null,
         note, date,
+        client: { prenom, nom, email, tel, adr1, adr2, ville, cp },
       });
       imported++;
+      importedPerRelease[releaseId] = (importedPerRelease[releaseId] || 0) + 1;
     }
 
-    saveAll();
+    // Resynchroniser commandes (release affichée) avec allCommandes
+    commandes = allCommandes[currentRelease] || [];
+
+    saveAll(true); // true = ne pas écraser allCommandes avec commandes (comme pour les groupées)
     updateStats();
     renderHistory();
     event.target.value = '';
-    showToast(imported + ' IMPORTÉES' + (skipped > 0 ? ' · ' + skipped + ' DOUBLONS' : ''));
+
+    const detail = Object.entries(importedPerRelease)
+      .map(([rid, n]) => (RELEASES_DEF[rid]?.nom || rid) + ':' + n)
+      .join(' · ');
+    let msg = imported + ' IMPORTÉES';
+    if (detail) msg += ' (' + detail + ')';
+    if (skipped > 0)   msg += ' · ' + skipped + ' DOUBLONS';
+    if (unmatched > 0) msg += ' · ' + unmatched + ' NON RECONNUES';
+    showToast(msg);
   };
   reader.readAsText(file, 'UTF-8');
 }
@@ -1685,14 +1790,18 @@ function switchToFinances(btn) {
   document.querySelector('.stats-bar').style.display = 'none';
   document.querySelector('.main').style.display = 'none';
   document.getElementById('finances-panel').classList.add('active');
+
   renderFinances();
 }
+
+
 
 function switchRelease(releaseId, btn) {
   inFinancesMode = false;
   document.querySelector('.stats-bar').style.display = '';
   document.querySelector('.main').style.display = '';
   document.getElementById('finances-panel').classList.remove('active');
+
   currentRelease = releaseId;
   localStorage.setItem('bdc_current_release', releaseId);
   params    = allParams[releaseId]    || JSON.parse(JSON.stringify(RELEASES_DEF[releaseId]));
@@ -1710,8 +1819,16 @@ function switchRelease(releaseId, btn) {
   updatePreview();
 }
 
+
+
+
+
+
+
+
+
 function renderFinances() {
-  const releases = ['bdc007', 'bdc010', 'bdc012', 'bdc013'];
+  const releases = ['bdc007', 'bdc010', 'bdc012', 'bdc013', 'bdc014', 'bdc015', 'bdc016'];
   let totalInvest = 0, totalRec = 0, totalFdpPayes = 0;
 
   // Calculer par release
@@ -1755,7 +1872,7 @@ function renderFinances() {
     <div class="fin-card">
       <div class="fin-card-label">Investissement total</div>
       <div class="fin-card-value">${fmt(totalInvest)}</div>
-      <div class="fin-card-sub">4 releases</div>
+      <div class="fin-card-sub">7 releases</div>
     </div>
     <div class="fin-card">
       <div class="fin-card-label">Recettes totales</div>
